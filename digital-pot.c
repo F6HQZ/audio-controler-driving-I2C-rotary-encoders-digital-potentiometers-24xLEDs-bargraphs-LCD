@@ -12,7 +12,7 @@
 | necessary and excellent wiringPi tools suite for Raspberry Pi from the |
 | "Gordons Projects" web sites from Gordon Henderson :                   |
 | https://projects.drogon.net/raspberry-pi/wiringpi/                     |
-| http://wiringpi.com/                                                   | 
+| http://wiringpi.com/                                                   |
 |                                                                        |
 | My library permits an easy use of few rotary encoders with push switch |
 | in ther axe and use them as "objects" stored in structures. Like this, |
@@ -87,12 +87,12 @@ int updateOneDigipot(char *digipot_label, int wiper_value)
 				
 					wiringPiI2CWriteReg8(digipot->digipot_setUpIO, instructionByte, wiper_value) ; // send the complete I2C frame to the chip
 									
-					printf(">>> Digipot addr: Ox%x = %d - setUpIO: 0x%x = %d - slaveAddressByte: 0x%x = %d - instructionByte: 0x%x = %d - dataByte: 0x%x = %d \n", 
+/*					printf(">>> Digipot addr: Ox%x = %d - setUpIO: 0x%x = %d - slaveAddressByte: 0x%x = %d - instructionByte: 0x%x = %d - dataByte: 0x%x = %d \n", 
 						digipot->digipot_address, digipot->digipot_address, 
 						digipot->digipot_setUpIO, digipot->digipot_setUpIO, 
 						slaveAddressByte, slaveAddressByte, instructionByte, 
 						instructionByte, wiper_value, wiper_value) ;
-					
+*/					
 					digipot->digipot_value[loop] = wiper_value ; // store the wiper value in Raspi local memory
 				}	
 				else if (digipot->digipot_reference =="HP16K33")
@@ -102,12 +102,12 @@ int updateOneDigipot(char *digipot_label, int wiper_value)
 
 					bargraphWrite(digipot->digipot_setUpIO, wiper_value) ; 
 									
-					printf(">>> Digipot addr: Ox%x = %d - setUpIO: 0x%x = %d - slaveAddressByte: 0x%x = %d - instructionByte: 0x%x = %d - dataByte: 0x%x = %d \n", 
+/*					printf(">>> Digipot addr: Ox%x = %d - setUpIO: 0x%x = %d - slaveAddressByte: 0x%x = %d - instructionByte: 0x%x = %d - dataByte: 0x%x = %d \n", 
 						digipot->digipot_address, digipot->digipot_address, 
 						digipot->digipot_setUpIO, digipot->digipot_setUpIO, 
 						slaveAddressByte, slaveAddressByte, instructionByte, 
 						instructionByte, wiper_value, wiper_value) ;
-					
+*/					
 					digipot->digipot_value[0] = wiper_value ; // store the wiper value in Raspi local memory
 				}	
 				
@@ -138,7 +138,7 @@ int digipotRead(char *digipot_label)
 			int loop = 0 ;
 			if (digipot_label == digipot->digipot_label[loop])
 			{
-				printf("*** digipot_label: %s - digipot->digipot_label: %d - loop: %d \n", digipot_label, digipot->digipot_label, loop) ;
+//				printf("*** digipot_label: %s - digipot->digipot_label: %d - loop: %d \n", digipot_label, digipot->digipot_label, loop) ;
 				int slaveAddressByte = digipot->digipot_address << 1 | 0b0 ; // prepare the first byte including the internal sub digipot address, only for displaying and tests, because it's sent automaticaly by wiringpi itself, don't care !
 				int instructionByte = loop << 5 ; // this is the "int reg", the second I2C byte sent by wiringpi
 				wiringPiI2CWriteReg8(digipot->digipot_setUpIO, instructionByte, digipot->digipot_value[loop]) ; // send the complete I2C frame to the chip, rewrite the current wipper value, because the READ instruction get the last writed digipot
@@ -147,7 +147,7 @@ int digipotRead(char *digipot_label)
 				x = wiringPiI2CRead(digipot->digipot_setUpIO) ;	
 				if (x > -1)
 				{
-					printf(">>> Digipot Read addr: Ox%x = %d - setUpIO: 0x%x = %d - slaveAddressByte: 0x%x = %d - instructionByte: 0x%x = %d - dataByte: 0x%x = %d \n", digipot->digipot_address, digipot->digipot_address, digipot->digipot_setUpIO, digipot->digipot_setUpIO, slaveAddressByte, slaveAddressByte, instructionByte, instructionByte, x, x) ;
+//					printf(">>> Digipot Read addr: Ox%x = %d - setUpIO: 0x%x = %d - slaveAddressByte: 0x%x = %d - instructionByte: 0x%x = %d - dataByte: 0x%x = %d \n", digipot->digipot_address, digipot->digipot_address, digipot->digipot_setUpIO, digipot->digipot_setUpIO, slaveAddressByte, slaveAddressByte, instructionByte, instructionByte, x, x) ;
 				}
 				else
 				{
@@ -215,7 +215,7 @@ struct digipot *setupdigipot(char *digipot_bus_type, int digipot_address,
 	
 	setUpIO = wiringPiI2CSetup(digipot_address) ; // I2C init, target to selected chip
 	if (setUpIO < 0) { printf("setUpIO: Unable to intialise I2C: %s\n", strerror(errno)) ;	}
-	printf(">>> setUpIO: %d \n",setUpIO) ;
+//	printf(">>> setUpIO: %d \n",setUpIO) ;
 	newdigipot->digipot_setUpIO = setUpIO ;
 	 
 	return newdigipot ;
