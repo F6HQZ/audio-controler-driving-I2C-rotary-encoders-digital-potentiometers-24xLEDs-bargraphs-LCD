@@ -24,7 +24,7 @@
 | gone before us.                                                        |
 |                                                                        |
 | Enjoy !                                                                |
-|                                                                        | 
+|                                                                        |
 | Feedback for bugs or ameliorations to f6hqz-m@hamwlan.net, thank you ! |
 \=======================================================================*/
  
