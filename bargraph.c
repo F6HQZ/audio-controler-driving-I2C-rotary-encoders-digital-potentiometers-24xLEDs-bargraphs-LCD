@@ -23,7 +23,7 @@
 | anywhere in your own software which must use them.                     |
 |                                                                        |
 | Thanks to friends who have supported me for this project and all guys  |
-| who have shared their own codes with the community.                    |
+| who have shared their own codes with the community.                    | 
 |                                                                        |
 | Always exploring new technologies, curious about any new idea or       |
 | solution, while respecting and thanking the work of alumni who have    |
