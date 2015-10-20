@@ -12,7 +12,7 @@
 | necessary and excellent wiringPi tools suite for Raspberry Pi from the |
 | "Gordons Projects" web sites from Gordon Henderson :                   |
 | https://projects.drogon.net/raspberry-pi/wiringpi/                     |
-| http://wiringpi.com/                                                   |
+| http://wiringpi.com/                                                   | 
 |                                                                        |
 | My library permits an easy use of few rotary encoders with push switch |
 | in ther axe and use them as "objects" stored in structures. Like this, |
