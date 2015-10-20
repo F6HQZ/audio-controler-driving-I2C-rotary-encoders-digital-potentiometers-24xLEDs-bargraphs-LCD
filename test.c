@@ -1,6 +1,8 @@
 /* test.c :
- * Permits to test the "rotaryencoder" and "I2C-Display" libraries.
+ * Permits to test the "rotaryencoder", "I2C-Display", "bargraph" and
+ * "digital-pot" libraries.
  * No more interest, except curiosity or learning.
+ * You must use your own to integrate that workshop into your audio project.
  * V.1.2.0
  */
 
