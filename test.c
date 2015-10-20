@@ -213,7 +213,7 @@ int main (void)
 		{
 			if (encoder->value != memo_rotary[step])
 			{	
-				printf("encoder->active_flag = %d \n", encoder->active_flag) ;
+//				printf("encoder->active_flag = %d \n", encoder->active_flag) ;
 				print = 1 ;
 				memo_rotary[step] = encoder->value ;
 				updateOneDigipot(encoder->drived_Entity, encoder->value) ;
@@ -245,7 +245,7 @@ int main (void)
 				{  					
 					if (encoder->label == button->label)
 					{	// found the attached rotary encoder
-						printf("+++ DIGIPOT: \"%s\" \n", encoder->drived_Entity) ;
+						printf("+++ reading DIGIPOT: \"%s\" \n", encoder->drived_Entity) ;
 						int x = digipotRead(encoder->drived_Entity) ; // read the attached digipot
 						found = 1 ;
 						break ;
@@ -319,7 +319,7 @@ int main (void)
 					x = wiringPiI2CRead(digipot->digipot_setUpIO) ;	
 					if (x > -1)
 					{
-						printf(">>> Digipot Read addr: Ox%x = %d - setUpIO: 0x%x = %d - slaveAdressByte: 0x%x = %d - instructionByte: 0x%x = %d - dataByte: 0x%x = %d \n", digipot->digipot_address, digipot->digipot_address, digipot->digipot_setUpIO, digipot->digipot_setUpIO, slaveAddressByte, slaveAddressByte, instructionByte, instructionByte, x, x) ;
+//						printf(">>> Digipot Read addr: Ox%x = %d - setUpIO: 0x%x = %d - slaveAdressByte: 0x%x = %d - instructionByte: 0x%x = %d - dataByte: 0x%x = %d \n", digipot->digipot_address, digipot->digipot_address, digipot->digipot_setUpIO, digipot->digipot_setUpIO, slaveAddressByte, slaveAddressByte, instructionByte, instructionByte, x, x) ;
 					}
 					else
 					{
