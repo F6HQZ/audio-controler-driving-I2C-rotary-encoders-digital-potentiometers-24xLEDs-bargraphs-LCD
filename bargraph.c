@@ -23,7 +23,7 @@
 | anywhere in your own software which must use them.                     |
 |                                                                        |
 | Thanks to friends who have supported me for this project and all guys  |
-| who have shared their own codes with the community.                    | 
+| who have shared their own codes with the community.                    |
 |                                                                        |
 | Always exploring new technologies, curious about any new idea or       |
 | solution, while respecting and thanking the work of alumni who have    |
@@ -90,45 +90,34 @@ int bargraphWrite(char *bargraph_label, long int value)
 				
 				// select the correct matrix green row :
 				x = value / 4 ; // 4 consecutive same color leds blocs
-//				printf("### value:%d - x:%d - x/3:%d - even/odd:%d - x%3:%d - x%6:%d - x%9:%d \n", value, x, x/3, (x/3)%2, x%3, x%6, x%9) ;
-				
-				switch (x%3) // 3 rows of same color leds
-				{
-					case 0 :
-						{ instructionByte = 0x01 ; break ; } // first row
-					case 1 :
-						{ instructionByte = 0x03 ; break ; } // second row
-					case 2 :
-						{ instructionByte = 0x05 ; break ; } // third row
-				}
-				
-//				printf("§§§ value:%d - x/3:%d - (x/3)/2:%d - ((x/3)/2)-1:%d - (8*((x/3)/2)):%d - (16*(((x/3)/2)-1)):%d \n",value,x/3,(x/3)/2,((x/3)/2)-1,(8*((x/3)/2)),(16*(((x/3)/2)-1)) ) ;
+//				printf("### value:%d - x:%d - x/3:%d - even/odd:%d - x%3:%d - x%6:%d - x%9:%d \n", value, x, x/3, (x/3)%2, x%3, x%6, x%9) ;				
+				printf("§§§ value:%d - page# x/3:%d - (x/3)/2:%d - ((x/3)/2)-1:%d - (8*((x/3)/2)):%d - (16*(((x/3)/2)-1)):%d \n",value,x/3,(x/3)/2,((x/3)/2)-1,(8*((x/3)/2)),(16*(((x/3)/2)-1)) ) ;
 
-				if((x/3)%2==1) 
-				{ // impair
+				if((x/3)%2==0) 
+				{ // even - (pair) - first 3 x 8 bits blocs (LSB)
 					switch (x%3) // LED row
 					{
 						case 0 :
-							{ value = 1 << (value - 8 -(8*((x/3)/2)) -(16*(((x/3)/2)))) ; break ; }
+							{ value = 1 << (value - 0 -(8*((x/3)/2)) -(16*((x/3)/2))) ; instructionByte = 0x01 ; break ; }
 						case 1 : 
-							{ value = 1 << (value - 12 -(8*((x/3)/2)) -(16*(((x/3)/2)))) ; break ; }
+							{ value = 1 << (value - 4 -(8*((x/3)/2)) -(16*((x/3)/2))) ; instructionByte = 0x03 ; break ; }
 						case 2 : 
-							{ value = 1 << (value - 16 -(8*((x/3)/2)) -(16*(((x/3)/2)))) ; break ; }
+							{ value = 1 << (value - 8 -(8*((x/3)/2)) -(16*((x/3)/2))) ; instructionByte = 0x05 ; break ; }
 					}
 				}
 				else
-				{ // pair
+				{ // odd - (impair) - last 3 x 8 bits blocs (MSB)
 					switch (x%3) // LED row
 					{
 						case 0 :
-							{ value = 1 << (value - 0 -(8*((x/3)/2)) -(16*((x/3)/2))) ; break ; }
+							{ value = 1 << (value -  8 -(8*((x/3)/2)) -(16*(((x/3)/2)))) ; instructionByte = 0x01 ; break ; }
 						case 1 : 
-							{ value = 1 << (value - 4 -(8*((x/3)/2)) -(16*((x/3)/2))) ; break ; }
+							{ value = 1 << (value - 12 -(8*((x/3)/2)) -(16*(((x/3)/2)))) ; instructionByte = 0x03 ; break ; }
 						case 2 : 
-							{ value = 1 << (value - 8 -(8*((x/3)/2)) -(16*((x/3)/2))) ; break ; }
+							{ value = 1 << (value - 16 -(8*((x/3)/2)) -(16*(((x/3)/2)))) ; instructionByte = 0x05 ; break ; }
 					}
 				}
-
+				
 //				printf(" === odd/even:%d - value: %d - setUpIO:%d - instructionByte: 0x%x - value: (%d) 0x%x ===\n\n", (x/3)%2, value, bargraph->bargraph_setUpIO, instructionByte, value, value) ;
 				
 				x = wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, value) ;
@@ -343,7 +332,7 @@ struct bargraph *setupbargraph(char *bargraph_label, int bargraph_address,
 	newbargraph->bargraph_ref = bargraph_ref ;           // model, provider/manufacturer reference
 	newbargraph->bargraph_steps = bargraph_steps ;       // number of LEDs steps without counting colors, only what is visible when lights turned OFF
 	newbargraph->bargraph_bicolor = bargraph_bicolor ;   // 1 or 2. Number of different colors/LEDs (ex: GREEN and RED LEDs = 2, ORANGE is ONLY this 2 colors ON simultaneously.)
-	newbargraph->bargraph_reversed = bargraph_reversed ; // 0 = no - 1 = yes - left to right or right to left, depending hardware integration in a front pannel
+	newbargraph->bargraph_reversed = bargraph_reversed ; // 0 = no - 1 =:mmmmmmmmmmmmmmmmmmmmmmml yes - left to right or right to left, depending hardware integration in a front pannel
 		
 	setUpIO = wiringPiI2CSetup(bargraph_address) ; // I2C init, return the standard Linux file number to handle the I2C chip
 	if (setUpIO < 0) { printf("setUpIO: Unable to intialise I2C: %s\n", strerror(errno)) ;	}
