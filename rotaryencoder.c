@@ -722,6 +722,6 @@ struct button *setupbutton(char *label, int pin, long int value)
 			break ;
 		default:
 			break ;
-	}
+	} 
 	return newbutton ;
 }
