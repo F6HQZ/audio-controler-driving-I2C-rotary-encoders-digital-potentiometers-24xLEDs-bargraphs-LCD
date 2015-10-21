@@ -217,7 +217,7 @@ int main (void)
 				print = 1 ;
 				memo_rotary[step] = encoder->value ;
 				updateOneDigipot(encoder->drived_Entity, encoder->value) ;
-				bargraphWrite("BARGRAPH", encoder->value) ;
+				bargraphWrite("BARGRAPH", encoder->low_Limit, encoder->high_Limit, encoder->value) ;
 //				printf("%s - step:%d - memo:%d - encoder->value:%d \n", encoder->label, step, memo_rotary[step], encoder->value) ;
 
 				// display to LCD
@@ -260,7 +260,7 @@ int main (void)
 				sprintf(textBuffer, "%d", encoder->value) ;
 //				sprintf(textBuffer, "%d", button->value) ; // push button name + 1 or 0 depending the button status
 				displayShow(encoder->label, textBuffer) ;
-				bargraphWrite("BARGRAPH", encoder->value) ;
+				bargraphWrite("BARGRAPH", encoder->low_Limit, encoder->high_Limit, encoder->value) ;
 			}		
 			
 			if (found == 1) 
