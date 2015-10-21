@@ -66,14 +66,21 @@ int numberofbargraphs = 0 ; // as writed, number of bargraphs, will be modified 
 void bargraphBlackOut(int setUpIO) ;
 
 int bargraphInit(void) ;
-int bargraphWrite(char *bargraph_label, long int value) ;
+int bargraphWrite(char *bargraph_label, long int low_Limit, long int high_Limit, long int value) ;
 
 //======================================================================
 
-int bargraphWrite(char *bargraph_label, long int value)
+int bargraphWrite(char *bargraph_label, long int low_Limit, long int high_Limit, long int value)
 { 	
 //	printf("\n !!! bargraph: %s - value: %d \n", bargraph_label, value) ;
 	int x = 0 ;
+	float coef = high_Limit - low_Limit ;
+	if ((high_Limit - low_Limit) <= 600) // number of max steps for this bargraph
+		{ coef = 599 / coef ; value = value * coef ; }
+	else
+		{ coef = coef / 599 ; value = value / coef ; }
+		
+//	printf("> lo:%d - hi:%d - coef:%f\n",low_Limit,high_Limit,coef) ;
 	
 	struct bargraph *bargraph = bargraphs ;	
 	for (; bargraph < bargraphs + numberofbargraphs ; bargraph++)
@@ -88,128 +95,104 @@ int bargraphWrite(char *bargraph_label, long int value)
 				
 				bargraphBlackOut(bargraph->bargraph_setUpIO) ; // cut all the LEDs light first
 				
-				// green + red leds in background :
-				long int backgroundLEDs = ((value/4)/3)/2 ;
+				// green LEDs in background, one green LED more step each time the RED LED cursor do a complete range course (24 green LEDs for 24 pages) :
+				long int backgroundLEDs = ((value/4)/3)/2 ; // 4 LEDs blocs, 3 rows by color matrix, 2 separated 4 bits blocs on the same row
 				
-				if (backgroundLEDs == 0)
-					{ backgroundLEDs = 0b0000 ; instructionByte = 0x01 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, backgroundLEDs) ; delay(2) ; }
+				if      (backgroundLEDs == 0)
+				{ 	backgroundLEDs = 0b00000000 ; instructionByte = 0x01 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, backgroundLEDs) ; delay(2) ; }
 				else if (backgroundLEDs == 1)
-					{ backgroundLEDs = 0b0001 ; instructionByte = 0x01 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, backgroundLEDs) ; delay(2) ; }
+				{ 	backgroundLEDs = 0b00000001 ; instructionByte = 0x01 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, backgroundLEDs) ; delay(2) ; }
 				else if (backgroundLEDs == 2)
-					{ backgroundLEDs = 0b0011 ; instructionByte = 0x01 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, backgroundLEDs) ; delay(2) ; }
+				{ 	backgroundLEDs = 0b00000011 ; instructionByte = 0x01 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, backgroundLEDs) ; delay(2) ; }
 				else if (backgroundLEDs == 3)
-					{ backgroundLEDs = 0b0111 ; instructionByte = 0x01 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, backgroundLEDs) ; delay(2) ; }
+				{ 	backgroundLEDs = 0b00000111 ; instructionByte = 0x01 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, backgroundLEDs) ; delay(2) ; }
 				else if (backgroundLEDs == 4)
-					{ backgroundLEDs = 0b1111 ; instructionByte = 0x01 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, backgroundLEDs) ; delay(2) ; }				
+				{ 	backgroundLEDs = 0b00001111 ; instructionByte = 0x01 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, backgroundLEDs) ; delay(2) ; }				
 
 				else if (backgroundLEDs == 5)
-					{ 	backgroundLEDs = 0b1111 ; instructionByte = 0x01 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, backgroundLEDs) ; delay(2) ; 
-						backgroundLEDs = 0b0001 ; instructionByte = 0x03 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, backgroundLEDs) ; delay(2) ; }
+				{ 	backgroundLEDs = 0b00001111 ; instructionByte = 0x01 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, backgroundLEDs) ; delay(2) ; 
+					backgroundLEDs = 0b00000001 ; instructionByte = 0x03 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, backgroundLEDs) ; delay(2) ; }
 				else if (backgroundLEDs == 6)
-					{ 	backgroundLEDs = 0b1111 ; instructionByte = 0x01 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, backgroundLEDs) ; delay(2) ; 
-						backgroundLEDs = 0b0011 ; instructionByte = 0x03 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, backgroundLEDs) ; delay(2) ; }
+				{ 	backgroundLEDs = 0b00001111 ; instructionByte = 0x01 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, backgroundLEDs) ; delay(2) ; 
+					backgroundLEDs = 0b00000011 ; instructionByte = 0x03 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, backgroundLEDs) ; delay(2) ; }
 				else if (backgroundLEDs == 7)
-					{ 	backgroundLEDs = 0b1111 ; instructionByte = 0x01 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, backgroundLEDs) ; delay(2) ; 
-						backgroundLEDs = 0b0111 ; instructionByte = 0x03 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, backgroundLEDs) ; delay(2) ; }
+				{ 	backgroundLEDs = 0b00001111 ; instructionByte = 0x01 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, backgroundLEDs) ; delay(2) ; 
+					backgroundLEDs = 0b00000111 ; instructionByte = 0x03 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, backgroundLEDs) ; delay(2) ; }
 				else if (backgroundLEDs == 8)
-					{ 	backgroundLEDs = 0b1111 ; instructionByte = 0x01 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, backgroundLEDs) ; delay(2) ; 
-						backgroundLEDs = 0b1111 ; instructionByte = 0x03 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, backgroundLEDs) ; delay(2) ; }
-				
+				{ 	backgroundLEDs = 0b00001111 ; instructionByte = 0x01 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, backgroundLEDs) ; delay(2) ; 
+					backgroundLEDs = 0b00001111 ; instructionByte = 0x03 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, backgroundLEDs) ; delay(2) ; }
+			
 				else if (backgroundLEDs == 9)
-					{ 	backgroundLEDs = 0b1111 ; instructionByte = 0x01 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, backgroundLEDs) ; delay(2) ; 
-						backgroundLEDs = 0b1111 ; instructionByte = 0x03 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, backgroundLEDs) ; delay(2) ; 
-						backgroundLEDs = 0b0001 ; instructionByte = 0x05 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, backgroundLEDs) ; delay(2) ; }
+				{ 	backgroundLEDs = 0b00001111 ; instructionByte = 0x01 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, backgroundLEDs) ; delay(2) ; 
+					backgroundLEDs = 0b00001111 ; instructionByte = 0x03 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, backgroundLEDs) ; delay(2) ; 
+					backgroundLEDs = 0b00000001 ; instructionByte = 0x05 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, backgroundLEDs) ; delay(2) ; }
 				else if (backgroundLEDs == 10)
-					{ 	backgroundLEDs = 0b1111 ; instructionByte = 0x01 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, backgroundLEDs) ; delay(2) ; 
-						backgroundLEDs = 0b1111 ; instructionByte = 0x03 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, backgroundLEDs) ; delay(2) ; 
-						backgroundLEDs = 0b0011 ; instructionByte = 0x05 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, backgroundLEDs) ; delay(2) ; }
+				{ 	backgroundLEDs = 0b00001111 ; instructionByte = 0x01 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, backgroundLEDs) ; delay(2) ; 
+					backgroundLEDs = 0b00001111 ; instructionByte = 0x03 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, backgroundLEDs) ; delay(2) ; 
+					backgroundLEDs = 0b00000011 ; instructionByte = 0x05 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, backgroundLEDs) ; delay(2) ; }
 				else if (backgroundLEDs == 11)
-					{ 	backgroundLEDs = 0b1111 ; instructionByte = 0x01 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, backgroundLEDs) ; delay(2) ; 
-						backgroundLEDs = 0b1111 ; instructionByte = 0x03 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, backgroundLEDs) ; delay(2) ; 
-						backgroundLEDs = 0b0111 ; instructionByte = 0x05 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, backgroundLEDs) ; delay(2) ; }
+				{ 	backgroundLEDs = 0b00001111 ; instructionByte = 0x01 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, backgroundLEDs) ; delay(2) ; 
+					backgroundLEDs = 0b00001111 ; instructionByte = 0x03 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, backgroundLEDs) ; delay(2) ; 
+					backgroundLEDs = 0b00000111 ; instructionByte = 0x05 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, backgroundLEDs) ; delay(2) ; }
 				else if (backgroundLEDs == 12)
-					{ 	backgroundLEDs = 0b1111 ; instructionByte = 0x01 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, backgroundLEDs) ; delay(2) ; 
-						backgroundLEDs = 0b1111 ; instructionByte = 0x03 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, backgroundLEDs) ; delay(2) ; 
-						backgroundLEDs = 0b1111 ; instructionByte = 0x05 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, backgroundLEDs) ; delay(2) ; }
+				{ 	backgroundLEDs = 0b00001111 ; instructionByte = 0x01 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, backgroundLEDs) ; delay(2) ; 
+					backgroundLEDs = 0b00001111 ; instructionByte = 0x03 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, backgroundLEDs) ; delay(2) ; 
+					backgroundLEDs = 0b00001111 ; instructionByte = 0x05 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, backgroundLEDs) ; delay(2) ; }
 
 				else if (backgroundLEDs == 13)
-					{ 	backgroundLEDs = 0b11111 ; instructionByte = 0x01 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, backgroundLEDs) ; delay(2) ; 
-						backgroundLEDs = 0b1111 ; instructionByte = 0x03 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, backgroundLEDs) ; delay(2) ; 
-						backgroundLEDs = 0b1111 ; instructionByte = 0x05 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, backgroundLEDs) ; delay(2) ; }
-//						backgroundLEDs = 0b0001 ; instructionByte = 0x01 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, backgroundLEDs) ; delay(2) ; }
+				{ 	backgroundLEDs = 0b00011111 ; instructionByte = 0x01 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, backgroundLEDs) ; delay(2) ; 
+					backgroundLEDs = 0b00001111 ; instructionByte = 0x03 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, backgroundLEDs) ; delay(2) ; 
+					backgroundLEDs = 0b00001111 ; instructionByte = 0x05 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, backgroundLEDs) ; delay(2) ; }
 				else if (backgroundLEDs == 14)
-					{ 	backgroundLEDs = 0b111111 ; instructionByte = 0x01 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, backgroundLEDs) ; delay(2) ; 
-						backgroundLEDs = 0b1111 ; instructionByte = 0x03 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, backgroundLEDs) ; delay(2) ; 
-						backgroundLEDs = 0b1111 ; instructionByte = 0x05 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, backgroundLEDs) ; delay(2) ; }
-//						backgroundLEDs = 0b0011 ; instructionByte = 0x01 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, backgroundLEDs) ; delay(2) ; }
+				{ 	backgroundLEDs = 0b00111111 ; instructionByte = 0x01 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, backgroundLEDs) ; delay(2) ; 
+					backgroundLEDs = 0b00001111 ; instructionByte = 0x03 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, backgroundLEDs) ; delay(2) ; 
+					backgroundLEDs = 0b00001111 ; instructionByte = 0x05 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, backgroundLEDs) ; delay(2) ; }
 				else if (backgroundLEDs == 15)
-					{ 	backgroundLEDs = 0b1111111 ; instructionByte = 0x01 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, backgroundLEDs) ; delay(2) ; 
-						backgroundLEDs = 0b1111 ; instructionByte = 0x03 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, backgroundLEDs) ; delay(2) ; 
-						backgroundLEDs = 0b1111 ; instructionByte = 0x05 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, backgroundLEDs) ; delay(2) ; }
-//						backgroundLEDs = 0b0111 ; instructionByte = 0x01 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, backgroundLEDs) ; delay(2) ; }
+				{ 	backgroundLEDs = 0b01111111 ; instructionByte = 0x01 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, backgroundLEDs) ; delay(2) ; 
+					backgroundLEDs = 0b00001111 ; instructionByte = 0x03 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, backgroundLEDs) ; delay(2) ; 
+					backgroundLEDs = 0b00001111 ; instructionByte = 0x05 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, backgroundLEDs) ; delay(2) ; }
 				else if (backgroundLEDs == 16)
-					{ 	backgroundLEDs = 0b11111111 ; instructionByte = 0x01 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, backgroundLEDs) ; delay(2) ; 
-						backgroundLEDs = 0b1111 ; instructionByte = 0x03 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, backgroundLEDs) ; delay(2) ; 
-						backgroundLEDs = 0b1111 ; instructionByte = 0x05 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, backgroundLEDs) ; delay(2) ; }
-//						backgroundLEDs = 0b1111 ; instructionByte = 0x01 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, backgroundLEDs) ; delay(2) ; }
+				{ 	backgroundLEDs = 0b11111111 ; instructionByte = 0x01 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, backgroundLEDs) ; delay(2) ; 
+					backgroundLEDs = 0b00001111 ; instructionByte = 0x03 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, backgroundLEDs) ; delay(2) ; 
+					backgroundLEDs = 0b00001111 ; instructionByte = 0x05 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, backgroundLEDs) ; delay(2) ; }
 
 				else if (backgroundLEDs == 17)
-					{ 	backgroundLEDs = 0b11111111 ; instructionByte = 0x01 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, backgroundLEDs) ; delay(2) ; 
-						backgroundLEDs = 0b11111 ; instructionByte = 0x03 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, backgroundLEDs) ; delay(2) ; 
-						backgroundLEDs = 0b1111 ; instructionByte = 0x05 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, backgroundLEDs) ; delay(2) ; }
-/*						backgroundLEDs = 0b1111 ; instructionByte = 0x01 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, backgroundLEDs) ; delay(2) ; 
-//						backgroundLEDs = 0b0001 ; instructionByte = 0x03 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, backgroundLEDs) ; delay(2) ; }
-*/				else if (backgroundLEDs == 18)
-					{ 	backgroundLEDs = 0b11111111 ; instructionByte = 0x01 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, backgroundLEDs) ; delay(2) ; 
-						backgroundLEDs = 0b111111 ; instructionByte = 0x03 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, backgroundLEDs) ; delay(2) ;
-						backgroundLEDs = 0b1111 ; instructionByte = 0x05 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, backgroundLEDs) ; delay(2) ; }
-/*						backgroundLEDs = 0b1111 ; instructionByte = 0x01 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, backgroundLEDs) ; delay(2) ;
-						backgroundLEDs = 0b0011 ; instructionByte = 0x03 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, backgroundLEDs) ; delay(2) ; }
-*/				else if (backgroundLEDs == 19)
-					{ 	backgroundLEDs = 0b11111111 ; instructionByte = 0x01 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, backgroundLEDs) ; delay(2) ;
-						backgroundLEDs = 0b1111111 ; instructionByte = 0x03 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, backgroundLEDs) ; delay(2) ;
-						backgroundLEDs = 0b1111 ; instructionByte = 0x05 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, backgroundLEDs) ; delay(2) ; }
-//						backgroundLEDs = 0b1111 ; instructionByte = 0x01 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, backgroundLEDs) ; delay(2) ;
-//						backgroundLEDs = 0b0111 ; instructionByte = 0x03 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, backgroundLEDs) ; delay(2) ; }
+				{ 	backgroundLEDs = 0b11111111 ; instructionByte = 0x01 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, backgroundLEDs) ; delay(2) ; 
+					backgroundLEDs = 0b00011111 ; instructionByte = 0x03 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, backgroundLEDs) ; delay(2) ; 
+					backgroundLEDs = 0b00001111 ; instructionByte = 0x05 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, backgroundLEDs) ; delay(2) ; }
+				else if (backgroundLEDs == 18)
+				{ 	backgroundLEDs = 0b11111111 ; instructionByte = 0x01 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, backgroundLEDs) ; delay(2) ; 
+					backgroundLEDs = 0b00111111 ; instructionByte = 0x03 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, backgroundLEDs) ; delay(2) ;
+					backgroundLEDs = 0b00001111 ; instructionByte = 0x05 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, backgroundLEDs) ; delay(2) ; }
+				else if (backgroundLEDs == 19)
+				{ 	backgroundLEDs = 0b11111111 ; instructionByte = 0x01 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, backgroundLEDs) ; delay(2) ;
+					backgroundLEDs = 0b01111111 ; instructionByte = 0x03 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, backgroundLEDs) ; delay(2) ;
+					backgroundLEDs = 0b00001111 ; instructionByte = 0x05 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, backgroundLEDs) ; delay(2) ; }
 				else if (backgroundLEDs == 20)
-					{ 	backgroundLEDs = 0b11111111 ; instructionByte = 0x01 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, backgroundLEDs) ; delay(2) ;
-						backgroundLEDs = 0b11111111 ; instructionByte = 0x03 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, backgroundLEDs) ; delay(2) ;
-						backgroundLEDs = 0b1111 ; instructionByte = 0x05 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, backgroundLEDs) ; delay(2) ; }
-/*						backgroundLEDs = 0b1111 ; instructionByte = 0x01 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, backgroundLEDs) ; delay(2) ;
-						backgroundLEDs = 0b1111 ; instructionByte = 0x03 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, backgroundLEDs) ; delay(2) ; }
-*/									
+				{ 	backgroundLEDs = 0b11111111 ; instructionByte = 0x01 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, backgroundLEDs) ; delay(2) ;
+					backgroundLEDs = 0b11111111 ; instructionByte = 0x03 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, backgroundLEDs) ; delay(2) ;
+					backgroundLEDs = 0b00001111 ; instructionByte = 0x05 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, backgroundLEDs) ; delay(2) ; }
+								
 				else if (backgroundLEDs == 21)
-					{ 	backgroundLEDs = 0b11111111 ; instructionByte = 0x01 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, backgroundLEDs) ; delay(2) ;
-						backgroundLEDs = 0b11111111 ; instructionByte = 0x03 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, backgroundLEDs) ; delay(2) ;
-						backgroundLEDs = 0b11111 ; instructionByte = 0x05 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, backgroundLEDs) ; delay(2) ; }
-/*						backgroundLEDs = 0b1111 ; instructionByte = 0x01 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, backgroundLEDs) ; delay(2) ;
-						backgroundLEDs = 0b1111 ; instructionByte = 0x03 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, backgroundLEDs) ; delay(2) ;
-						backgroundLEDs = 0b0001 ; instructionByte = 0x05 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, backgroundLEDs) ; delay(2) ; }
-*/				else if (backgroundLEDs == 22)
-					{ 	backgroundLEDs = 0b11111111 ; instructionByte = 0x01 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, backgroundLEDs) ; delay(2) ;
-						backgroundLEDs = 0b11111111 ; instructionByte = 0x03 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, backgroundLEDs) ; delay(2) ;
-						backgroundLEDs = 0b111111 ; instructionByte = 0x05 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, backgroundLEDs) ; delay(2) ; }
-/*						backgroundLEDs = 0b1111 ; instructionByte = 0x01 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, backgroundLEDs) ; delay(2) ;
-						backgroundLEDs = 0b1111 ; instructionByte = 0x03 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, backgroundLEDs) ; delay(2) ;
-						backgroundLEDs = 0b0011 ; instructionByte = 0x05 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, backgroundLEDs) ; delay(2) ; }
-*/				else if (backgroundLEDs == 23)
-					{ 	backgroundLEDs = 0b11111111 ; instructionByte = 0x01 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, backgroundLEDs) ; delay(2) ;
-						backgroundLEDs = 0b11111111 ; instructionByte = 0x03 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, backgroundLEDs) ; delay(2) ;
-						backgroundLEDs = 0b1111111 ; instructionByte = 0x05 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, backgroundLEDs) ; delay(2) ; }
-/*						backgroundLEDs = 0b1111 ; instructionByte = 0x01 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, backgroundLEDs) ; delay(2) ;
-						backgroundLEDs = 0b1111 ; instructionByte = 0x03 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, backgroundLEDs) ; delay(2) ;
-						backgroundLEDs = 0b0111 ; instructionByte = 0x05 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, backgroundLEDs) ; delay(2) ; }
-*/				else if (backgroundLEDs == 24)
-					{ 	backgroundLEDs = 0b11111111 ; instructionByte = 0x01 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, backgroundLEDs) ; delay(2) ;
-						backgroundLEDs = 0b11111111 ; instructionByte = 0x03 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, backgroundLEDs) ; delay(2) ;
-						backgroundLEDs = 0b11111111 ; instructionByte = 0x05 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, backgroundLEDs) ; delay(2) ; }
-/*						backgroundLEDs = 0b1111 ; instructionByte = 0x01 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, backgroundLEDs) ; delay(2) ;
-						backgroundLEDs = 0b1111 ; instructionByte = 0x03 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, backgroundLEDs) ; delay(2) ;
-						backgroundLEDs = 0b1111 ; instructionByte = 0x05 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, backgroundLEDs) ; delay(2) ; }
-*/														
+				{ 	backgroundLEDs = 0b11111111 ; instructionByte = 0x01 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, backgroundLEDs) ; delay(2) ;
+					backgroundLEDs = 0b11111111 ; instructionByte = 0x03 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, backgroundLEDs) ; delay(2) ;
+					backgroundLEDs = 0b00011111 ; instructionByte = 0x05 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, backgroundLEDs) ; delay(2) ; }
+				else if (backgroundLEDs == 22)
+				{ 	backgroundLEDs = 0b11111111 ; instructionByte = 0x01 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, backgroundLEDs) ; delay(2) ;
+					backgroundLEDs = 0b11111111 ; instructionByte = 0x03 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, backgroundLEDs) ; delay(2) ;
+					backgroundLEDs = 0b00111111 ; instructionByte = 0x05 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, backgroundLEDs) ; delay(2) ; }
+				else if (backgroundLEDs == 23)
+				{ 	backgroundLEDs = 0b11111111 ; instructionByte = 0x01 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, backgroundLEDs) ; delay(2) ;
+					backgroundLEDs = 0b11111111 ; instructionByte = 0x03 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, backgroundLEDs) ; delay(2) ;
+					backgroundLEDs = 0b01111111 ; instructionByte = 0x05 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, backgroundLEDs) ; delay(2) ; }
+				else if (backgroundLEDs == 24)
+				{ 	backgroundLEDs = 0b11111111 ; instructionByte = 0x01 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, backgroundLEDs) ; delay(2) ;
+					backgroundLEDs = 0b11111111 ; instructionByte = 0x03 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, backgroundLEDs) ; delay(2) ;
+					backgroundLEDs = 0b11111111 ; instructionByte = 0x05 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, backgroundLEDs) ; delay(2) ; }
+														
 //				printf("instructionByte: 0x%x - backgroundLEDs:%d 0x%x \n",instructionByte,backgroundLEDs,backgroundLEDs) ;
 													
-				// select the correct matrix green row :
+				// select the correct matrix red LEDs row, only one LED lighting, running along the bargraph for more precision :
 				x = value / 4 ; // 4 consecutive same color leds blocs
 //				printf("### value:%d - x:%d - x/3:%d - even/odd:%d - x%3:%d - x%6:%d - x%9:%d \n", value, x, x/3, (x/3)%2, x%3, x%6, x%9) ;				
 //				printf("§§§ value:%d - page# x/3:%d - (x/3)/2:%d - ((x/3)/2)-1:%d - (8*((x/3)/2)):%d - (16*(((x/3)/2)-1)):%d \n",value,x/3,(x/3)/2,((x/3)/2)-1,(8*((x/3)/2)),(16*(((x/3)/2)-1)) ) ;
