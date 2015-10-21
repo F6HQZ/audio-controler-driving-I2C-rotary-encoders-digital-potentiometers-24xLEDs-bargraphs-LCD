@@ -188,19 +188,18 @@ int main (void)
 	printf("\n The first rotary encoder is used to modify the PWM-LED dim which must be connected on pin #1, not another, which s the only one PWM capable. \n") ;
 	printf("\n Some rotary encoders own a push button in their axis to trigger some extra feature, \n as to load or save something in memory, or change the feature to modify, etc... \n\n") ;
 
-	int x = bargraphInit() ;
-	if (x < 0) { printf("bargrapInit: Unable to intialise: %s\n", strerror(errno)) ; }
+	if (bargraphInit() < 0) { printf("bargrapInit: Unable to intialise: %s\n", strerror(errno)) ; } // bargraph init sequence
 
 	while (1)
 	{
-		delay (10) ; // 10 ms default, decreases the loop speed (and the CPU load from about 25% to minus than 0.3%)
+		delay (10) ; // 10 ms default, decreasing the loop speed (and the CPU load from about 25% to minus than 0.3%)
 		digitalWrite (LED_DOWN, OFF) ;	// OFF
 		digitalWrite (LED_UP, OFF) ; 	// OFF
 
 		int step = 0 ;
 		unsigned char print = 0 ;
 		
-		// check if it's time to cut off the backlight of the LCD
+		// check if it's time to cut off the backlight of the LCD Display
 		if ( (backlightTempo != 0) && ((millis() - backlightTimer) > backlightTempo) && (backlightStatus == 1) )
 		{
 			digitalWrite(AF_BL, OFF) ; delay(LCD_DELAY) ;	// put Backlight OFF
@@ -223,10 +222,17 @@ int main (void)
 				// display to LCD
 				char textBuffer[16] ;
 				sprintf(textBuffer, "%d", encoder->value) ;
-				displayShow(encoder->label, textBuffer) ;
-				
+				displayShow(encoder->label, textBuffer) ;		
 			}				
-			
+			if (touched == encoder->label)
+			{
+				bargraphWrite("BARGRAPH", encoder->low_Limit, encoder->high_Limit, encoder->value) ;
+				// display to LCD
+				char textBuffer[16] ;
+				sprintf(textBuffer, "%d", encoder->value) ;
+				displayShow(encoder->label, textBuffer) ;	
+				touched = "1" ;	
+			}
 			++step ;	
 		} 
 		
@@ -257,7 +263,7 @@ int main (void)
 				
 				// display to LCD
 				char textBuffer[16] ;
-				sprintf(textBuffer, "%d", encoder->value) ;
+				sprintf(textBuffer, "%d", encoder->value) ; // push the rotary encoder name and its current value as memo/recall rather than rotate it, to avoid to change value
 //				sprintf(textBuffer, "%d", button->value) ; // push button name + 1 or 0 depending the button status
 				displayShow(encoder->label, textBuffer) ;
 				bargraphWrite("BARGRAPH", encoder->low_Limit, encoder->high_Limit, encoder->value) ;
@@ -270,14 +276,14 @@ int main (void)
 			++step ;	
 		}
 		
-		//check if any rotary encoder is moving or button pressed and turn display light on if any
-		if (touched == 1)
+		//check if any rotary encoder is moving or button pressed and turn display backlight on if any
+		if (touched == "1")
 		{
 			displayShow("", "") ; // restart backlight
-			touched = 0 ;
+			touched = "0" ;
 		}
 		
-		// and if any value modified, then display the new value (and all others too)
+		// and if any value modified, then display through HDMI output the new value (and all others too)
 		if (print) 
 		{
 			struct encoder *encoder = encoders ;
