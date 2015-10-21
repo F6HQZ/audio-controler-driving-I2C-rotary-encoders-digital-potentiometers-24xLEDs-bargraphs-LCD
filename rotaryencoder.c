@@ -98,7 +98,7 @@ unsigned char last_instant_status = 0 ;// previous button status for comparison 
 unsigned long int impulse_time = 0 ;   // exact bounce time
 unsigned long int last_impulse_time = 0 ; // just the preview time value, to know time before two status change
 unsigned char writeOk = 1 ;            // a flag which authorize the current values to be recorded in the objects structure
-unsigned char touched = 0 ;            // is some command touched moved by user ?
+char *touched ;                        // LABEL. Is some command touched moved by user ?
 
 struct encoder *lastEncoder ;
 struct encoder *currentEncoder ;
@@ -152,7 +152,7 @@ void updateOneEncoder(unsigned char interrupt)
 	
 	struct encoder *encoder = encoders ;
 	
-	touched = 1 ;
+	touched = "1" ;
 	
 	step = 0 ;	
 	now = micros() ; // mark elapsed time for chrono 1 - elaped time between two detends (or steps if 1/4 grey code sequence rotary encoder model) for "speed rotation"
@@ -173,6 +173,8 @@ void updateOneEncoder(unsigned char interrupt)
 			{	// found the correct encoder which is interrupting
 			
 				encoder->active_flag = 1 ;
+
+				touched = encoder->label ;
 			
 //				printf("#0 - IRQ:%d - encoder->last_Pin:%d - encoder->last_IRQ_a:%d - encoder->last_IRQ_b:%d \n", interrupt, encoder->last_Pin, micros() - encoder->last_IRQ_a, micros() - encoder->last_IRQ_b) ;
 				// secondary debouncing method : never twice same IRQ line, need to pass a certain time between two steps before accept
@@ -445,7 +447,7 @@ void updateOneButton(unsigned char interrupt)
 	int pin ;	
 	struct button *button = buttons ;
 	
-	touched = 1 ;
+	touched = "1" ;
 	
 //	unsigned long int starting_time = 0 ;  // start this debounce timer now
 	
@@ -722,6 +724,6 @@ struct button *setupbutton(char *label, int pin, long int value)
 			break ;
 		default:
 			break ;
-	} 
+	}
 	return newbutton ;
 }
