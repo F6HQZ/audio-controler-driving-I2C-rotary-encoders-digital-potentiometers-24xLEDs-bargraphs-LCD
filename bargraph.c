@@ -250,7 +250,7 @@ void bargraphBlackOut(int setUpIO)
 
 int bargraphInit(void)
 {
-	printf("\n bargraphInit start...") ;
+	printf("bargraphInit start...") ;
 	
 	struct bargraph *bargraph = bargraphs ;	
 	int x ;
@@ -286,7 +286,7 @@ int bargraphInit(void)
 			delay(2) ;
 			
 			// bargraph dance for test, starting with GREEN LEDs :
-			printf(" - LAS VEGAS...") ;
+			printf(" - LAS VEGAS !...") ;
 			wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, 0x01, 0x01) ; 
 			delay(30) ;
 			wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, 0x01, 0x02) ;
@@ -410,7 +410,7 @@ int bargraphInit(void)
 			wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, 0x04, 0x00) ; 
 			delay(2) ;
 				
-			printf(" - bargraphInit terminated...") ;
+			printf(" - bargraphInit terminated...\n\n") ;
 			
 			break ;
 		}	
@@ -436,7 +436,7 @@ struct bargraph *setupbargraph(char *bargraph_label, int bargraph_address,
 	newbargraph->bargraph_ref = bargraph_ref ;           // model, provider/manufacturer reference
 	newbargraph->bargraph_steps = bargraph_steps ;       // number of LEDs steps without counting colors, only what is visible when lights turned OFF
 	newbargraph->bargraph_bicolor = bargraph_bicolor ;   // 1 or 2. Number of different colors/LEDs (ex: GREEN and RED LEDs = 2, ORANGE is ONLY this 2 colors ON simultaneously.)
-	newbargraph->bargraph_reversed = bargraph_reversed ; // 0 = no - 1 =:mmmmmmmmmmmmmmmmmmmmmmml yes - left to right or right to left, depending hardware integration in a front pannel
+	newbargraph->bargraph_reversed = bargraph_reversed ; // 0 = no - 1 = yes - left to right or right to left, depending hardware integration in a front pannel
 		
 	setUpIO = wiringPiI2CSetup(bargraph_address) ; // I2C init, return the standard Linux file number to handle the I2C chip
 	if (setUpIO < 0) { printf("setUpIO: Unable to intialise I2C: %s\n", strerror(errno)) ;	}
