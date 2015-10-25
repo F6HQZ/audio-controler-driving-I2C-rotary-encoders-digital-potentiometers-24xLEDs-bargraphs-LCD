@@ -48,6 +48,7 @@
  */
  
 #include <stdio.h>
+#include <math.h>
 
 #include <wiringPi.h>
 #include <wiringPiI2C.h>
@@ -56,15 +57,17 @@
 
 struct digipot *setupdigipot(char *digipot_bus_type, int digipot_address, 
 	char digipot_channels, char *digipot_reference,	int digipot_ohms, 
-	int wiper_positions, char *digipot_label0, char *digipot_label1, 
-	char *digipot_label2, char *digipot_label3, char *digipot_label4, 
-	char *digipot_label5, char *digipot_label6, char *digipot_label7) ; 
+	int wiper_positions, char *digipot_label0, char *curve0, char *digipot_label1, 
+	char *curve1, char *digipot_label2, char *curve2, char *digipot_label3, 
+	char *curve3, char *digipot_label4, char *curve4, char *digipot_label5, 
+	char *curve5, char *digipot_label6, char *curve6, char *digipot_label7, 
+	char *curve7)  ; 
 
 // don't change these init values :
 int numberofdigipots = 0 ; // as writed, number of digipots, will be modified by the code later
 
 int updateOneDigipot(char *digipot_label, int wiper_value) ; // store all values in Raspi RAM
-int digipotRead(char *digipot_label) ; // Read from digipot
+double digipotRead(char *digipot_label) ; // Read from digipot
 int digipotWrite(char *digipot_label) ; // Write to digipot
 
 //======================================================================
@@ -80,7 +83,7 @@ int updateOneDigipot(char *digipot_label, int wiper_value)
 		{
 			if (digipot_label == digipot->digipot_label[loop])
 			{
-				if (digipot->digipot_reference == "AD5293")
+				if (digipot->digipot_reference == "AD5263") // chip from Analog Device
 				{
 					int slaveAddressByte = digipot->digipot_address << 1 | 0b0 ; // prepare the first byte including the internal sub digipot address, only for displaying and tests, because it's sent automaticaly by wiringpi itself, don't care !	
 					int instructionByte = loop << 5 ; // this is the "int reg", the second I2C byte sent by wiringpi
@@ -95,25 +98,26 @@ int updateOneDigipot(char *digipot_label, int wiper_value)
 */					
 					digipot->digipot_value[loop] = wiper_value ; // store the wiper value in Raspi local memory
 				}	
-				else if (digipot->digipot_reference =="HP16K33")
+/*				else if (digipot->digipot_reference =="HP16K33")
 				{
 					int slaveAddressByte = digipot->digipot_address << 1 | 0b0 ; // prepare the first byte including the internal sub digipot address, only for displaying and tests, because it's sent automaticaly by wiringpi itself, don't care !	
 					int instructionByte = loop << 5 ; // this is the "int reg", the second I2C byte sent by wiringpi
 
 					bargraphWrite(digipot->digipot_setUpIO, wiper_value) ; 
 									
-/*					printf(">>> Digipot addr: Ox%x = %d - setUpIO: 0x%x = %d - slaveAddressByte: 0x%x = %d - instructionByte: 0x%x = %d - dataByte: 0x%x = %d \n", 
-						digipot->digipot_address, digipot->digipot_address, 
-						digipot->digipot_setUpIO, digipot->digipot_setUpIO, 
-						slaveAddressByte, slaveAddressByte, instructionByte, 
-						instructionByte, wiper_value, wiper_value) ;
-*/					
 					digipot->digipot_value[0] = wiper_value ; // store the wiper value in Raspi local memory
 				}	
+*/				
+				int x = -1 ;
+				x = wiringPiI2CRead(digipot->digipot_setUpIO) ;	
 				
-//				int x = -1 ;
-//				x = wiringPiI2CRead(digipot->digipot_setUpIO) ;	
-//				printf(">>> Digipot Read response : %d \n", x) ;
+				// convert tap position to attenuation in dB
+				double tap = -(x - digipot->wiper_positions) ;
+				double ratio = ((digipot->wiper_positions - tap) / (digipot->wiper_positions -1)) ;
+				double dB = (20 * log10(ratio)) ;
+				digipot->digipot_att[loop] = dB ; // store the digipot attenuation in dB
+					
+				printf("\n>>> Digipot Read response : x:%d - tap:%0.0f - att:%2.2f(dB) \n", x, tap, dB) ;
 				
 				break ;
 			}
@@ -125,9 +129,9 @@ int updateOneDigipot(char *digipot_label, int wiper_value)
 
 //======================================================================
 
-int digipotRead(char *digipot_label)
+double digipotRead(char *digipot_label)
 {
-	int x = -1 ;
+	double x = -1 ;
 	struct digipot *digipot = digipots ;	
 	for (; digipot < digipots + numberofdigipots ; digipot++)
 	{
@@ -135,7 +139,7 @@ int digipotRead(char *digipot_label)
 		int found = 0 ;
 		for (; loop < digipot->digipot_channels ; loop++)
 		{
-			int loop = 0 ;
+			int loop = 0 ; 
 			if (digipot_label == digipot->digipot_label[loop])
 			{
 //				printf("*** digipot_label: %s - digipot->digipot_label: %d - loop: %d \n", digipot_label, digipot->digipot_label, loop) ;
@@ -143,11 +147,20 @@ int digipotRead(char *digipot_label)
 				int instructionByte = loop << 5 ; // this is the "int reg", the second I2C byte sent by wiringpi
 				wiringPiI2CWriteReg8(digipot->digipot_setUpIO, instructionByte, digipot->digipot_value[loop]) ; // send the complete I2C frame to the chip, rewrite the current wipper value, because the READ instruction get the last writed digipot
 				
-				x = -1 ;
+				int x = -1 ;
 				x = wiringPiI2CRead(digipot->digipot_setUpIO) ;	
+				
 				if (x > -1)
-				{
-//					printf(">>> Digipot Read addr: Ox%x = %d - setUpIO: 0x%x = %d - slaveAddressByte: 0x%x = %d - instructionByte: 0x%x = %d - dataByte: 0x%x = %d \n", digipot->digipot_address, digipot->digipot_address, digipot->digipot_setUpIO, digipot->digipot_setUpIO, slaveAddressByte, slaveAddressByte, instructionByte, instructionByte, x, x) ;
+				{	// convert tap position to attenuation in dB
+					double tap = -(x - digipot->wiper_positions) ;
+					double ratio = ((digipot->wiper_positions - tap) / (digipot->wiper_positions - 1)) ;
+					double dB = 1/(20 * log10(ratio)) ;
+						
+					printf("\n>>> Digipot Read response : x:%d - tap:%-0.0f - att:%0.2f(dB) \n", x, tap, dB) ;
+					
+					printf(">>> Digipot Read addr: Ox%x = %d - setUpIO: 0x%x = %d - slaveAddressByte: 0x%x = %d - instructionByte: 0x%x = %d - dataByte/att: 0x%x = %3.2f(dB) \n", 
+							digipot->digipot_address, digipot->digipot_address, digipot->digipot_setUpIO, digipot->digipot_setUpIO, slaveAddressByte, slaveAddressByte, instructionByte, instructionByte, x, dB) ;
+
 				}
 				else
 				{
@@ -177,9 +190,12 @@ int digipotRead(char *digipot_label)
 
 struct digipot *setupdigipot(char *digipot_bus_type, int digipot_address, 
 	char digipot_channels, char *digipot_reference,	int digipot_ohms, 
-	int wiper_positions, char *digipot_label0, char *digipot_label1, 
-	char *digipot_label2, char *digipot_label3, char *digipot_label4, 
-	char *digipot_label5, char *digipot_label6, char *digipot_label7) 
+	int wiper_positions, char *digipot_label0, char *digipot_curve0, 
+	char *digipot_label1, char *digipot_curve1, char *digipot_label2, 
+	char *digipot_curve2, char *digipot_label3, char *digipot_curve3, 
+	char *digipot_label4, char *digipot_curve4, char *digipot_label5, 
+	char *digipot_curve5, char *digipot_label6, char *digipot_curve6, 
+	char *digipot_label7, char *digipot_curve7) 
 {
 	int loop = 0 ;
 	
@@ -198,18 +214,27 @@ struct digipot *setupdigipot(char *digipot_bus_type, int digipot_address,
 	newdigipot->digipot_channels = digipot_channels ;	 // number of independant digipots in the same IC : single, dual, quad, octo...
 	
 	newdigipot->digipot_label[0] = digipot_label0 ; // 8 labels for names for each independant pots in the same IC
+	newdigipot->digipot_curve[0] = digipot_curve0 ;  // linear ,log, antilog, whatever described in the library
 	newdigipot->digipot_label[1] = digipot_label1 ; 
+	newdigipot->digipot_curve[1] = digipot_curve1 ;
 	newdigipot->digipot_label[2] = digipot_label2 ; 
+	newdigipot->digipot_curve[2] = digipot_curve2 ;          
 	newdigipot->digipot_label[3] = digipot_label3 ;
+	newdigipot->digipot_curve[3] = digipot_curve3 ;
 	newdigipot->digipot_label[4] = digipot_label4 ;
+	newdigipot->digipot_curve[4] = digipot_curve4 ;         
 	newdigipot->digipot_label[5] = digipot_label5 ;
+	newdigipot->digipot_curve[5] = digipot_curve5 ;          
 	newdigipot->digipot_label[6] = digipot_label6 ;
+	newdigipot->digipot_curve[6] = digipot_curve6 ;          
 	newdigipot->digipot_label[7] = digipot_label7 ;
+	newdigipot->digipot_curve[7] = digipot_curve7 ;          
 
 	for (; loop < digipot_channels ; loop++)
 	{
 		newdigipot->wiper_memo[loop] = 0 ; // record the last position before to shutdown, to restore value at restarting
 		newdigipot->digipot_value[loop] = 0 ; // current digipot register value for each channel
+		newdigipot->digipot_att[MAX_POT_CHIP] = 0 ; // in dB, current attenuation, calculated from the current digipot_value
 //		printf("newdigipot loop:%d - \"%s\" - memo:%d - value:%d  \n", loop, newdigipot->digipot_label[loop], newdigipot->wiper_memo[loop], newdigipot->digipot_value[loop]) ;
 	}
 	
