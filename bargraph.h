@@ -52,7 +52,7 @@
 
 #include "binary-values.h"
 
-#define MAX_BARGRAPHS 2
+#define MAX_BARGRAPHS 2 // or any you want with different I2C adresses
 
 // HT16K33 is a 16 x 8 LEDs matrix I2C controler 
 // Following are its registers and variables
