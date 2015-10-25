@@ -59,10 +59,12 @@ struct digipot
 	int digipot_address ;                // address of the chip on the I2C or SPI bus
 	char *digipot_reference ;            // digipot provider reference
 	int digipot_ohms ;                   // RAB potentiometer resistor value
+	char *digipot_curve[MAX_POT_CHIP] ;  // linear ,log, antilog, whatever described in the library
 	int wiper_positions ;                // 128 256 512 1024 positions from 0 to max value (A to B pot connectors)
 	char digipot_channels ;              // number of independant digipots in the same chipset : single, dual, quad, octo...
-	int wiper_memo[MAX_POT_CHIP] ;                  // record the last position before to shutdown to restore at restarting for each channel
+	int wiper_memo[MAX_POT_CHIP] ;       // record the last position before to shutdown to restore at restarting for each channel
 	volatile long int digipot_value[MAX_POT_CHIP] ; // current digipot register value for each channel
+	double digipot_att[MAX_POT_CHIP] ;   // in dB, current attenuation, calculated from the current digipot_value
 	int digipot_setUpIO ;
 };
 
@@ -70,6 +72,9 @@ struct digipot digipots[MAX_DIGIPOTS] ;
 
 struct digipot *setupdigipot(char *digipot_bus_type, int digipot_address, 
 	char digipot_channels, char *digipot_reference,	int digipot_ohms, 
-	int wiper_positions, char *digipot_label0, char *digipot_label1, 
-	char *digipot_label2,	char *digipot_label3, char *digipot_label4, 
-	char *digipot_label5,	char *digipot_label6, char *digipot_label7) ; 
+	int wiper_positions, char *digipot_label0, char *digipot_curve0, 
+	char *digipot_label1, char *digipot_curve1, char *digipot_label2, 
+	char *digipot_curve2, char *digipot_label3, char *digipot_curve3, 
+	char *digipot_label4, char *digipot_curve4, char *digipot_label5, 
+	char *digipot_curve5, char *digipot_label6, char *digipot_curve6, 
+	char *digipot_label7, char *digipot_curve7) ; 
