@@ -98,7 +98,7 @@ unsigned char last_instant_status = 0 ;// previous button status for comparison 
 unsigned long int impulse_time = 0 ;   // exact bounce time
 unsigned long int last_impulse_time = 0 ; // just the preview time value, to know time before two status change
 unsigned char writeOk = 1 ;            // a flag which authorize the current values to be recorded in the objects structure
-char *touched ;                        // LABEL. Is some command touched moved by user ?
+char *touched ;                        // LABEL. Is some command touched moved by user ? it's LABEL is here
 
 struct encoder *lastEncoder ;
 struct encoder *currentEncoder ;
@@ -317,6 +317,7 @@ void updateOneEncoder(unsigned char interrupt)
 				// but not yet the "step" (-1, 1) as just top due to full sequence instead of 1/4 step
 				encoder->lastEncoded = current_step ;		
 				encoder->active_flag = 0 ;
+				touched = encoder->label ;
 				break ; // found the correct encoder, exit from the loop, winning CPU time
 			}
 		}
