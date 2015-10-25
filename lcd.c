@@ -489,7 +489,7 @@ int lcdInit (const int rows, const int cols, const int bits,
   lcdClear       (lcdFd) ;
 
   putCommand (lcd, LCD_ENTRY   | LCD_ENTRY_ID) ;
-  putCommand (lcd, LCD_CDSHIFT | LCD_CDSHIFT_RL) ;
+  putCommand (lcd, LCD_CDSHIFT | LCD_CDSHIFT_RL) ; 
 
   return lcdFd ;
 }
