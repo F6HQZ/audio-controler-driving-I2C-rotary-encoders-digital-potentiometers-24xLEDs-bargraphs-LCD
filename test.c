@@ -79,7 +79,7 @@
 #include "I2C-Display.c"
 #include "digital-pot.c"
 #include "bargraph.c"
-#include "pins-extensions.c"
+#include "extensions-modules.c"
 
 // used GPIO for 2 UP/DOWN monitor flashing LEDs (arbitrary, you can change as desired)
 #define	LED_DOWN	25
@@ -157,8 +157,8 @@ int main (void)
 	
 	printf("A/D D/A converters declaration start \n") ;
 	// bargraphs declaration :
-	struct pcf8591 *pcf8591 = 
-	setuppcf8591("CONVERTER#1",0x48) ; // name, I2C address
+	struct extension_module *extension_module =
+	setupModule("CONVERTER#1","PCF8591",0x48,200) ; // name, chip type, I2C address, I/O pins base (>64 and different of the others)
 	printf("A/D D/A converters declaration end \n") ;
 
 	extern numberofencoders ;
@@ -369,6 +369,15 @@ int main (void)
 					}
 				}
 			}
+					
+			// read the analog I2C module equiped with a PCF8591
+			int pin ;
+			int value ;
+			for (pin = 0 ; pin < 4 ; ++pin)
+		    {
+		      value = analogRead  (200 + pin) ;
+		      printf ("### Analog Input #%d  %5.2f \n", pin, (double)value * 3.3 / 255.0) ;
+		    }
 
 			print = 0 ;
 		}
