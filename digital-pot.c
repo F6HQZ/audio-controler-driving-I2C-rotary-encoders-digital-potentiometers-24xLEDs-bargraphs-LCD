@@ -117,7 +117,7 @@ int updateOneDigipot(char *digipot_label, int wiper_value)
 				double dB = (20 * log10(ratio)) ;
 				digipot->digipot_att[loop] = dB ; // store the digipot attenuation in dB
 					
-				printf("\n>>> Digipot Read response : x:%d - tap:%0.0f - att:%2.2f(dB) \n", x, tap, dB) ;
+//				printf("\n>>> Digipot Read response : x:%d - tap:%0.0f - att:%2.2f(dB) \n", x, tap, dB) ;
 				
 				break ;
 			}
@@ -156,11 +156,11 @@ double digipotRead(char *digipot_label)
 					double ratio = ((digipot->wiper_positions - tap) / (digipot->wiper_positions - 1)) ;
 					double dB = 1/(20 * log10(ratio)) ;
 						
-					printf("\n>>> Digipot Read response : x:%d - tap:%-0.0f - att:%0.2f(dB) \n", x, tap, dB) ;
+//					printf("\n>>> Digipot Read response : x:%d - tap:%-0.0f - att:%0.2f(dB) \n", x, tap, dB) ;
 					
-					printf(">>> Digipot Read addr: Ox%x = %d - setUpIO: 0x%x = %d - slaveAddressByte: 0x%x = %d - instructionByte: 0x%x = %d - dataByte/att: 0x%x = %3.2f(dB) \n", 
+/*					printf(">>> Digipot Read addr: Ox%x = %d - setUpIO: 0x%x = %d - slaveAddressByte: 0x%x = %d - instructionByte: 0x%x = %d - dataByte/att: 0x%x = %3.2f(dB) \n", 
 							digipot->digipot_address, digipot->digipot_address, digipot->digipot_setUpIO, digipot->digipot_setUpIO, slaveAddressByte, slaveAddressByte, instructionByte, instructionByte, x, dB) ;
-
+*/
 				}
 				else
 				{
