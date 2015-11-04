@@ -448,7 +448,7 @@ void updateOneButton(unsigned char interrupt)
 	int pin ;	
 	struct button *button = buttons ;
 	
-	touched = "1" ;
+//	touched = "1" ;
 	
 //	unsigned long int starting_time = 0 ;  // start this debounce timer now
 	
@@ -517,6 +517,7 @@ void updateOneButton(unsigned char interrupt)
 						button->timestamp = micros() ;			
 					}
 				}			
+				touched = button->label ;
 				button->active_flag = 0 ;  // unlock it, job is terminated
 				break ; // terminated with the correct encoder, exit from the loop
 			}
