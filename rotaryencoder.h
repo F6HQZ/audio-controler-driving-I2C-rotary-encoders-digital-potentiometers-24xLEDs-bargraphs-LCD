@@ -114,6 +114,6 @@ struct button
 	int active_flag ;                      // already working on its status (to avoid loop reentrance for each bounce)
 };
 
-struct button buttons[max_buttons] ; 
+struct button buttons[max_buttons] ;
 
 struct button *setupbutton(char *label, int pin, long int value) ;
