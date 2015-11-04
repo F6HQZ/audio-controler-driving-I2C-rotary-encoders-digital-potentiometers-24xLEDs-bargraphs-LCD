@@ -1,5 +1,5 @@
-/* extensions-modules.h :
- * 
+/* extensions-modules.c :
+* 
  * Permits to drive a gang of I2C AD/DA PCF8591 behind a Raspberry Pi.
  * To be used with digital-pot.c digital-pot.h I2C-Display.c rotaryencoder.c 
  * and rotaryencoder.h bargraph.h bargraph.c libraries.
@@ -35,8 +35,7 @@
 | Enjoy !                                                                |
 |                                                                        |
 | Feedback for bugs or ameliorations to f6hqz-m@hamwlan.net, thank you ! |
-\=======================================================================*/
- 
+\=======================================================================*/ 
 /*
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as 
@@ -52,22 +51,59 @@
  * License along with this program; 
  * if not, see <http://www.gnu.org/licenses/>.
  */
+ 
+#include <stdio.h>
 
-#include "binary-values.h"
+#include <wiringPi.h>
+#include <wiringPiI2C.h>
+#include <pcf8591.h>
 
-#define MAX_MODULES 8 // or any you want with different I2C adresses
+#include "extensions-modules.h"
 
-// PCF8591 is an I2C A/D D/A converter, offering 4 A/D inputs and 1 D/A output.
+struct extension_module *setupModule(char *module_label, 
+	char *module_input_name_0, char *module_input_name_1, 
+	char *module_input_name_2, char *module_input_name_3, 
+	char *module_type, char *module_bus_type, int module_address, 
+	int module_pinBase) ; 
+	
+int numberofmodules = 0 ; // as writed, number of bargraphs, will be modified by the code later
 
-struct extension_module
+//======================================================================
+
+
+//======================================================================
+
+struct extension_module *setupModule(char *module_label, 
+	char *module_input_name_0, char *module_input_name_1, 
+	char *module_input_name_2, char *module_input_name_3, 
+	char *module_type, char *module_bus_type, int module_address, 
+	int module_pinBase)
 {
-	char *module_label ;  // name or label as "Volume" or "Balance" or "Treble", etc...
-	char *module_type ;   // type of chip, PCF8591, or of the described chips at top of this file
-	int module_address ;  // address of the chip on the I2C or SPI bus (check with "gpio i2cdetect" Linux console instruction)
-	int module_pinBase ;  // first pin (base) address, need to be different for each converter and >64
-	int module_setUpIO ;  // used to point to the correct I2C system object by wiringPi
-} ;
+	if (numberofmodules > MAX_MODULES)
+	{
+		printf("Max number of modules like pcf8591's exceded: %i\n", MAX_MODULES) ;
+		return NULL ;
+	}
+	
+	struct extension_module *newmodule = modules + numberofmodules++ ;
+	newmodule->module_label = module_label ;         // name given to this chip, as "CONVERTER#1", as a reminder of "what is this $#% of chip for ?"
+	newmodule->module_type = module_type ;           // type of chip, PCF8591, or of the described chips at top of the "extensions-modules.h" file
+	newmodule->module_bus_type = module_bus_type ;   // 0 for I2C or 1 for SPI
+	newmodule->module_address = module_address ;     // address of the chip on the I2C or SPI bus (check with "gpio i2cdetect" Linux console instruction)
+	newmodule->module_pinBase = module_pinBase ;     // first pin (base) address, need to be different for each converter and >64
+	
+	
+	newmodule->module_input_name[0] = module_input_name_0 ; // name or label as "INPUT", "VOLUME" or "STAGE1" or "OUTPUT", etc... for each chip I/O channel
+	newmodule->module_input_name[1] = module_input_name_1 ; 
+	newmodule->module_input_name[2] = module_input_name_2 ; 
+	newmodule->module_input_name[3] = module_input_name_3 ; 
+	
+	if (module_type == "PCF8591")
+	{
+		pcf8591Setup(module_pinBase, module_address) ;
+		printf("pcf8591#:0x%x I2C:0x%x Pinbase:%d - init done ! \n", modules, module_address, module_pinBase) ;
+	}
+	
+	return newmodule ;
+}
 
-struct extension_module modules[MAX_MODULES] ;
-
-struct extension_module *setupModule(char *module_label, char *module_type, int module_address, int module_pinBase) ; 
