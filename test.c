@@ -92,6 +92,9 @@
 
 extern int speed ;
 
+unsigned long int voltmeterReadingInterval = 1 ; // microsecondes
+unsigned long int voltmeterTimer ;
+
 void pwmWrite (int pin, int value) ;
 
 extern void displayInit (void) ;
@@ -152,15 +155,15 @@ int main (void)
 	printf("bargraphs declaration start \n") ;
 	// bargraphs declaration :
 	struct bargraph *bargraph = 
-	setupbargraph("BARGRAPH",0x70,"adafruit1721",24,2,NO) ; // name, I2C address, ref, LEDs number, colors
+	setupbargraph("BARGRAPH",0x70,"adafruit1721",24,2,NO) ; // name, I2C address, ref, LEDs number, colors, instaled reversed
 	printf("bargraphs declaration end \n") ;
 	
 	printf("A/D D/A converters declaration start \n") ;
 	// bargraphs declaration :
 	struct extension_module *extension_module =
-	setupModule("CONVERTER#1","PCF8591",0x48,200) ; // name, chip type, I2C address, I/O pins base (>64 and different of the others)
+	setupModule("CONVERTER#1","GAIN","POST-EQ","PUSHPULL-OUTPUT","LINE-OUTPUT","PCF8591","0",0x48,200) ; // name, name of chan#0, chan#1, chan#2, chan#3, chip type, I2C address, I/O pins base (>64 and different of the others)
 	printf("A/D D/A converters declaration end \n") ;
-
+	
 	extern numberofencoders ;
 	extern numberofbuttons ;
 	extern numberofdigipots ;
@@ -169,6 +172,8 @@ int main (void)
 	
 	long int memo_rotary[numberofencoders] ; // record the rotary encoder value for modification detection later
 	long int memo_button[numberofbuttons] ;  // record the button value for modification detection later
+	char *bargraphInput ;
+	int voltmeterInput ;
 
 	//display to HDMI screen the components list :
 	printf("\nDIGIPOTS list :\n-----------------\n") ;
@@ -182,6 +187,19 @@ int main (void)
 		printf("BUS Type: %s \n address: %d \n chipset ref: %s \n R value: %d \n Wiper positions: %d \n channels: %d \n mem address: 0x%x \n-----------------\n", 
 			digipot->digipot_bus_type, digipot->digipot_address, digipot->digipot_reference, digipot->digipot_ohms, digipot->wiper_positions, digipot->digipot_channels, digipot) ; 
 	}
+		printf("\nEXTENSIONS-MODULES list :\n-----------------\n") ;
+		
+	for (; extension_module < modules + numberofmodules ; extension_module++)
+	{ 
+		int loop = 0 ;
+		for (; loop < MAX_CHANNELS ; loop++)
+			{
+				printf("EXTENSIONS-MODULE:[%d]: \"%s\" \n", loop, extension_module->module_input_name[loop]) ;
+			}
+		printf("BUS Type: %s \n address: %d \n chipset ref: %s \n module label: %s \n mem address: 0x%x \n-----------------\n", 
+			extension_module->module_bus_type, extension_module->module_address, extension_module->module_type, extension_module->module_label, extension_module) ; 
+	}
+
 	printf("\nROTARY ENCODERS list :\n-----------------\n") ;
 	for (; encoder < encoders + numberofencoders ; encoder++)
 	{
@@ -201,7 +219,7 @@ int main (void)
 
 	while (1)
 	{
-		delay (10) ; // 10 ms default, decreasing the loop speed (and the CPU load from about 25% to minus than 0.3%)
+//		delay (10) ; // 10 ms default, decreasing the loop speed (and the CPU load from about 25% to minus than 0.3%)
 		digitalWrite (LED_DOWN, OFF) ;	// OFF
 		digitalWrite (LED_UP, OFF) ; 	// OFF
 
@@ -209,12 +227,12 @@ int main (void)
 		unsigned char print = 0 ;
 		
 		// check if it's time to cut off the backlight of the LCD Display
-		if ( (backlightTempo != 0) && ((millis() - backlightTimer) > backlightTempo) && (backlightStatus == 1) )
+		if ( (backlightTempo != 0) && ((millis() - backlightTimer) > backlightTempo) && (backlightStatus == ON) )
 		{
 			digitalWrite(AF_BL, OFF) ; delay(LCD_DELAY) ;	// put Backlight OFF
 			backlightStatus = OFF ;
 		}
-		
+				
 		// check if any rotary encoder modified value
 		struct encoder *encoder = encoders ;
 		for (; encoder < encoders + numberofencoders ; encoder++)
@@ -233,7 +251,7 @@ int main (void)
 			{
 //				printf("touched#2: %s \n",touched) ;
 				// display to Bargraph
-				bargraphWrite("BARGRAPH", encoder->low_Limit, encoder->high_Limit, encoder->value) ;
+				bargraphWrite("BARGRAPH", encoder->low_Limit, encoder->high_Limit, 0, encoder->value) ;
 				
 				struct digipot *digipot = digipots ;	
 				for (; digipot < digipots + numberofdigipots ; digipot++)
@@ -247,7 +265,7 @@ int main (void)
 							char textBuffer[16] ;
 							sprintf(textBuffer, "%-5d%8.2f dB", encoder->value, digipot->digipot_att[loop]) ; // to char type conversion
 							displayShow(encoder->label, textBuffer) ;	
-							touched = "1" ;	
+//							touched = "1" ;	
 						}
 					}
 				}
@@ -271,7 +289,7 @@ int main (void)
 				{  					
 					if (encoder->label == button->label)
 					{	// found the attached rotary encoder
-						bargraphWrite("BARGRAPH", encoder->low_Limit, encoder->high_Limit, encoder->value) ;
+						bargraphWrite("BARGRAPH", encoder->low_Limit, encoder->high_Limit, 0, encoder->value) ;
 						
 						struct digipot *digipot = digipots ;	
 						for (; digipot < digipots + numberofdigipots ; digipot++)
@@ -283,9 +301,9 @@ int main (void)
 								{
 									// display to LCD
 									char textBuffer[16] ;
-									sprintf(textBuffer, "%-5d%8.2f dB", encoder->value, digipot->digipot_att[loop]) ; // to char type conversion
+									sprintf(textBuffer, "%-5d0x%X%7.2f dB", encoder->value, encoder->value, digipot->digipot_att[loop]) ; // to char type conversion
 									displayShow(encoder->label, textBuffer) ;	
-									touched = "1" ;	
+//									touched = "1" ;	
 								}
 							}
 						}
@@ -305,10 +323,54 @@ int main (void)
 				break ;
 			}
 			++step ;	
-		}
+		}	
 		
+		// update the bargraph with the last analog input value selected by the last "touched" rotary encoder
+		if (touched != "0")
+		{
+			voltmeterInput = 0 ;
+			bargraphInput = touched ;
+			struct extension_module *extension_module = modules ;
+			for (; extension_module < modules + numberofmodules ; extension_module++)
+			{ 
+				int loop = 0 ;					
+				for (; loop < MAX_CHANNELS ; loop++)
+				{
+					if (extension_module->module_input_name[loop] == bargraphInput) 
+					{
+						voltmeterInput = extension_module->module_pinBase + loop ;
+						break ;
+					} 
+				}
+				if (voltmeterInput > 0) {break ; }
+			}
+		}		
+		if ((backlightStatus == OFF) && ((micros() - voltmeterTimer) > voltmeterReadingInterval))
+		{	// read the analog input and update the bargraph value
+			int peakValue = 0 ;
+			int value = 0 ;
+			int loop = 0 ;
+//			printf("\n--- voltmeterInput:%d - ", voltmeterInput) ; 
+			long int sampleDuration = 0 ;
+			long int sampleStartingTime = micros() ;
+			for(; sampleDuration < 5000 ; loop++) // few audio samples for peak detection during a short period (abt 5ms as requested for integration)
+			{
+				value = analogRead(voltmeterInput) ;
+				if (value > peakValue) 
+				{ 
+					peakValue = value ; // peak memo after few analog samples
+				}		
+				sampleDuration = micros() - sampleStartingTime ;
+//				printf("loop:%d - value:%d - peakValue:%d - ", loop, value, peakValue) ;
+			}
+//			printf(" ---\n") ;
+			bargraphWrite("BARGRAPH", 0, 255, 3, (long int) peakValue) ; // bargraph name, min, max, VU-Meter type: 0 green bar + red LED moving for elementary steps, 1 normal linear with one long green bar zone + 1 small amber bar + 1 small red bar, 2 same but logarythmic, 3 Digital Peal meter (green bar and only one RED)
+			voltmeterTimer = micros() ;
+//			printf("\n ~~~ value:%d - sampleDuration:%d", value, sampleDuration) ;
+		}
+
 		//check if any rotary encoder is moving or button pressed and turn display backlight on if any
-		if (touched == "1")
+		if (touched != "0")
 		{
 			displayShow("", "") ; // restart backlight
 			touched = "0" ;
@@ -371,14 +433,22 @@ int main (void)
 			}
 					
 			// read the analog I2C module equiped with a PCF8591
-			int pin ;
-			int value ;
-			for (pin = 0 ; pin < 4 ; ++pin)
+			int pin = 0 ;
+			for (; pin < 4 ; ++pin)
 		    {
-		      value = analogRead  (200 + pin) ;
-		      printf ("### Analog Input #%d  %5.2f \n", pin, (double)value * 3.3 / 255.0) ;
+				int value = 0 ;
+				int loop = 0 ;
+				for(; loop < 20 ; loop++) // few audio samples for peak detection during a short period
+				{
+					int peakValue = 0 ;
+					value = analogRead  (200 + pin) ;
+					if (value > peakValue) 
+					{ 
+						peakValue = value ; // peak memo after few analog samples
+					}		
+				}
+				printf ("### Analog Input #%d  %5.2f (peak) \n", pin, (double)value * 3.3 / 255) ;
 		    }
-
 			print = 0 ;
 		}
 	}
