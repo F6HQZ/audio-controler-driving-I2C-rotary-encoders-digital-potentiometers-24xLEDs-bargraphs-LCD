@@ -76,7 +76,7 @@
 #define AF_D4	(AF_BASE + 7)
 #define LCD_DELAY	1	// needs some time between two sending to a LCD to avoid to turn it mad
 
-unsigned int backlightTempo = 10000 ; // the backlight cut off after a	while (ms), or never if 0
+unsigned int backlightTempo = 3000 ; // the backlight cut off after a	while (ms), or never if 0
 unsigned long int backlightTimer ; // display backlight enlighting duration timer
 unsigned char backlightStatus ; // backlight ON or OFF status
 
@@ -140,12 +140,12 @@ void displayShow (char *line1, char *line2)
 		lcdClear(lcdDisplay1) ; delay(LCD_DELAY) ;
 		
 		lcdPosition(lcdDisplay1,0,0) ; delay(LCD_DELAY) ;
-		printf("LCD ligne 1: %s \n", line1) ;	
+//		printf("LCD ligne 1: %s \n", line1) ;	
 		//	lcdPuts(lcdDisplay1, line1) ; delay(LCD_DELAY) ;
 		lcdPrintf(lcdDisplay1, line1) ; delay(LCD_DELAY) ;
 		
 		lcdPosition(lcdDisplay1,0,1) ; delay(LCD_DELAY) ;
-		printf("LCD ligne 2: %s \n", line2) ;
+//		printf("LCD ligne 2: %s \n", line2) ;
 		//	lcdPuts(lcdDisplay1, (const char *)line2) ; delay(LCD_DELAY) ;
 		lcdPrintf(lcdDisplay1, line2) ; delay(LCD_DELAY) ;
 	}
