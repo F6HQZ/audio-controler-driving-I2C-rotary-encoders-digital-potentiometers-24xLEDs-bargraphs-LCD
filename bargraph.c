@@ -71,7 +71,6 @@ struct bargraph *setupbargraph(char *bargraph_label, int bargraph_address,
 int numberofbargraphs = 0 ; // as writed, number of bargraphs, will be modified by the code later
 	
 void bargraphBlackOut(int setUpIO) ;
-
 int bargraphInit(void) ;
 int bargraphWrite(char *bargraph_label, float low_Limit, float high_Limit, int bargraph_mode, long int value) ;
 
@@ -91,7 +90,7 @@ int bargraphWrite(char *bargraph_label, float low_Limit, float high_Limit, int b
 		{	// found one
 			switch (bargraph_mode)
 			{	// different displaying mode cases, different effects
-				case 0 : // green LEDs background bar for the full scale, but a unique red LED turning several times for each of the smallest steps
+				case 0 : // green LEDs background bar for the full scale, but a unique red LED turning several times for each of the smallest steps, for rotary encoder rotation guide
 				{
 					if (bargraph->bargraph_ref == "adafruit1721")
 					{ 	
@@ -244,7 +243,7 @@ int bargraphWrite(char *bargraph_label, float low_Limit, float high_Limit, int b
 					}
 					break ;
 				}
-				case 1 : // like a standard analog audio VU-Meter, green bar + orange small bar + a red few leds at right, with a needle integration balistic emulation (temporized decay)
+				case 1 : // like a standard analog audio VU-Meter but linear (not log), green bar + orange small bar + a red few leds at right, with a needle integration balistic emulation (temporized decay)
 				{
 					if (bargraph->bargraph_ref == "adafruit1721")
 					{ 	// found one
@@ -414,161 +413,124 @@ int bargraphWrite(char *bargraph_label, float low_Limit, float high_Limit, int b
 						int values = 256 ;
 						int zerodB = 255 ;
 						int ledsQty = bargraph->bargraph_steps ; // 24 apparent steps
-						int ledStep_dB = 2 ; // each LED bar one more step = 2 dB x 24 LEDs = 48 dB of dynamic
-						// log variation	
-						float ratio = (float) (values - value) / (values -1) ;  // Input value / Full Scale
-//						ratio = abs(ratio*1000) ;
-//						ratio = ratio / 1000 ;
-						float dB = - 20 * log10(ratio) ;
-						int bargraph_value = dB / ledStep_dB ;
-						printf("\n === value:%d - ratio:%3.2f - dBu:%3.2f - newvalue:%d ===", value, ratio, dB, bargraph_value) ;
+						int ledStep_dB = 2 ; // each LED bar one more step = 2 dB x 24 LEDs = 48 dB of dynamic = 8 bits !
+						int bargraph_length = 0 ; // how many GREEN LEDs ON, 0 to 24
+						int bargraph_value = 0 ; // value which will be realy sent to bargraph to display through I2C
+						int suplBits = 0 ; // used to add few LSB to bargraph_Value
+						int instructionByte ; 
+						int bargraphRedBlackout ;
 						
-//						bargraph_value = bargraph_value + 100 ; // kind of gain to read small values higher on the bargraph scale
-
-						if (bargraph_value > bargraph->bargraph_value)
+						// for manual tests only
+//						value = 10 ;
+						
+						// log variation	
+						float ratio = (float) value / zerodB ;  // Input value / Full Scale
+						float dB = 20 * log10(ratio) ;
+						bargraph_length = 25 + (dB / ledStep_dB) ;
+						
+						// for manual tests only
+//						bargraph_length = 1 ;
+//						value = 255 ;						
+						
+						// few manual cosmetic corrections for first steps
+						switch(value)
 						{
-							bargraph->bargraph_value = bargraph_value ; // peak value recorded
+							case 1 : bargraph_length = 1 ; break ; // the smallerst value to display on first LED  
+							case 2 : bargraph_length = 2 ; break ; 
+							case 3 : bargraph_length = 3 ; break ; 
+							case 4 : bargraph_length = 4 ; break ; 
+							case 5 : bargraph_length = 5 ; break ; 
+							case 6 : bargraph_length = 6 ; break ; 
+							case 7 : bargraph_length = 7 ; break ; 
+							case 8 : bargraph_length = 8 ; break ; 
+							case 9 : bargraph_length = 9 ; break ; 
+							default: break ;
+						}
+
+						if (bargraph_length > bargraph->bargraph_value)
+						{
+							bargraph->bargraph_value = bargraph_length ; // peak value recorded
 						}
 						else 
 						{
-							bargraph->bargraph_value = bargraph->bargraph_value -1 ;
-							bargraph_value = bargraph->bargraph_value ;
+							if ((bargraph->bargraph_value > 0) && (bargraph_length <  bargraph->bargraph_value)) { bargraph->bargraph_value = bargraph->bargraph_value -1 ; }  // slowly decreases the enlighted bargraph length
+							bargraph_length = bargraph->bargraph_value ;
 						}
 
-						int slaveAddressByte = bargraph->bargraph_address << 1 | 0b0 ; // prepare the first byte including the internal sub digipot address, only for displaying and tests, because it's sent automaticaly by wiringpi itself, don't care !	
-						int instructionByte ;
-						
-						// 3 LEDs segments with different colors green, orange and red at final :
-//						long int enlightedLEDs = ((value/4)/3)/2 ; // 4 LEDs blocs, 3 rows by color matrix, 2 separated 4 bits blocs on the same row
-
-						value = 0b00000000 ; instructionByte = 0x00 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, value) ; delay(I2C_DELAY) ;
-						if 		(bargraph_value < 17)
+/*						3 LEDs segments with different colors green, orange and red at final :
+						long int enlightedLEDs = ((value/4)/3)/2 ; // 4 LEDs blocs, 3 rows by color matrix, 2 separated 4 bits blocs on the same row
+*/
+						if (bargraph_length == 0)
 						{
-							value = 0b00000000 ; instructionByte = 0x02 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, value) ; delay(I2C_DELAY) ;
-							value = 0b00000000 ; instructionByte = 0x04 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, value) ; delay(I2C_DELAY) ;
+							suplBits = 0 ;
 						}
-						else if (bargraph_value < 21)
+						else if (bargraph_length == 1 | bargraph_length == 5 | bargraph_length ==  9 | bargraph_length == 13 | bargraph_length == 17 | bargraph_length == 21)
 						{
-							value = 0b00000000 ; instructionByte = 0x04 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, value) ; delay(I2C_DELAY) ;
+							suplBits = 0b1 ;
 						}
-												
-						if      (bargraph_value == 0)
-						{ 	value = 0b00000000 ; instructionByte = 0x01 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, value) ; delay(I2C_DELAY) ; 
-							value = 0b00000000 ; instructionByte = 0x03 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, value) ; delay(I2C_DELAY) ;
-							value = 0b00000000 ; instructionByte = 0x05 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, value) ; delay(I2C_DELAY) ; }
-						else if (bargraph_value == 1)
-						{ 	value = 0b00000001 ; instructionByte = 0x01 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, value) ; delay(I2C_DELAY) ; 
-							value = 0b00000000 ; instructionByte = 0x03 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, value) ; delay(I2C_DELAY) ;
-							value = 0b00000000 ; instructionByte = 0x05 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, value) ; delay(I2C_DELAY) ; }
-						else if (bargraph_value == 2)
-						{ 	value = 0b00000011 ; instructionByte = 0x01 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, value) ; delay(I2C_DELAY) ; 
-							value = 0b00000000 ; instructionByte = 0x03 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, value) ; delay(I2C_DELAY) ;
-							value = 0b00000000 ; instructionByte = 0x05 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, value) ; delay(I2C_DELAY) ; }
-						else if (bargraph_value == 3)
-						{ 	value = 0b00000111 ; instructionByte = 0x01 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, value) ; delay(I2C_DELAY) ; 
-							value = 0b00000000 ; instructionByte = 0x03 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, value) ; delay(I2C_DELAY) ;
-							value = 0b00000000 ; instructionByte = 0x05 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, value) ; delay(I2C_DELAY) ; }
-						else if (bargraph_value == 4)
-						{ 	value = 0b00001111 ; instructionByte = 0x01 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, value) ; delay(I2C_DELAY) ;				
-							value = 0b00000000 ; instructionByte = 0x03 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, value) ; delay(I2C_DELAY) ;
-							value = 0b00000000 ; instructionByte = 0x05 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, value) ; delay(I2C_DELAY) ; }
+						else if (bargraph_length == 2 | bargraph_length == 6 | bargraph_length == 10 | bargraph_length == 14 | bargraph_length == 18 | bargraph_length == 22)
+						{
+							suplBits = 0b11 ;
+						}
+						else if (bargraph_length == 3 | bargraph_length == 7 | bargraph_length == 11 | bargraph_length == 15 | bargraph_length == 19 | bargraph_length == 23)
+						{
+							suplBits = 0b111 ;
+						}
+						else if (bargraph_length == 4 | bargraph_length == 8 | bargraph_length == 12 | bargraph_length == 16 | bargraph_length == 20 | bargraph_length == 24)
+						{
+							suplBits = 0b1111 ;
+						}
 
-						else if (bargraph_value == 5)
-						{ 	value = 0b00001111 ; instructionByte = 0x01 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, value) ; delay(I2C_DELAY) ; 
-							value = 0b00000001 ; instructionByte = 0x03 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, value) ; delay(I2C_DELAY) ; 
-							value = 0b00000000 ; instructionByte = 0x05 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, value) ; delay(I2C_DELAY) ; }
-						else if (bargraph_value == 6)
-						{ 	value = 0b00001111 ; instructionByte = 0x01 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, value) ; delay(I2C_DELAY) ; 
-							value = 0b00000011 ; instructionByte = 0x03 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, value) ; delay(I2C_DELAY) ; 
-							value = 0b00000000 ; instructionByte = 0x05 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, value) ; delay(I2C_DELAY) ; }
-						else if (bargraph_value == 7)
-						{ 	value = 0b00001111 ; instructionByte = 0x01 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, value) ; delay(I2C_DELAY) ; 
-							value = 0b00000111 ; instructionByte = 0x03 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, value) ; delay(I2C_DELAY) ; 
-							value = 0b00000000 ; instructionByte = 0x05 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, value) ; delay(I2C_DELAY) ; }
-						else if (bargraph_value == 8)
-						{ 	value = 0b00001111 ; instructionByte = 0x01 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, value) ; delay(I2C_DELAY) ; 
-							value = 0b00001111 ; instructionByte = 0x03 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, value) ; delay(I2C_DELAY) ; 
-							value = 0b00000000 ; instructionByte = 0x05 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, value) ; delay(I2C_DELAY) ; }
-					
-						else if (bargraph_value == 9)
-						{ 	value = 0b00001111 ; instructionByte = 0x01 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, value) ; delay(I2C_DELAY) ; 
-							value = 0b00001111 ; instructionByte = 0x03 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, value) ; delay(I2C_DELAY) ; 
-							value = 0b00000001 ; instructionByte = 0x05 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, value) ; delay(I2C_DELAY) ; }
-						else if (bargraph_value == 10)
-						{ 	value = 0b00001111 ; instructionByte = 0x01 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, value) ; delay(I2C_DELAY) ; 
-							value = 0b00001111 ; instructionByte = 0x03 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, value) ; delay(I2C_DELAY) ; 
-							value = 0b00000011 ; instructionByte = 0x05 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, value) ; delay(I2C_DELAY) ; }
-						else if (bargraph_value == 11)
-						{ 	value = 0b00001111 ; instructionByte = 0x01 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, value) ; delay(I2C_DELAY) ; 
-							value = 0b00001111 ; instructionByte = 0x03 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, value) ; delay(I2C_DELAY) ; 
-							value = 0b00000111 ; instructionByte = 0x05 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, value) ; delay(I2C_DELAY) ; }
-						else if (bargraph_value == 12)
-						{ 	value = 0b00001111 ; instructionByte = 0x01 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, value) ; delay(I2C_DELAY) ; 
-							value = 0b00001111 ; instructionByte = 0x03 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, value) ; delay(I2C_DELAY) ; 
-							value = 0b00001111 ; instructionByte = 0x05 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, value) ; delay(I2C_DELAY) ; }
-		
-						else if (bargraph_value == 13)
-						{ 	value = 0b00011111 ; instructionByte = 0x01 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, value) ; delay(I2C_DELAY) ; 
-							value = 0b00001111 ; instructionByte = 0x03 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, value) ; delay(I2C_DELAY) ; 
-							value = 0b00001111 ; instructionByte = 0x05 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, value) ; delay(I2C_DELAY) ; }
-						else if (bargraph_value == 14)
-						{ 	value = 0b00111111 ; instructionByte = 0x01 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, value) ; delay(I2C_DELAY) ; 
-							value = 0b00001111 ; instructionByte = 0x03 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, value) ; delay(I2C_DELAY) ; 
-							value = 0b00001111 ; instructionByte = 0x05 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, value) ; delay(I2C_DELAY) ; }
-						else if (bargraph_value == 15)
-						{ 	value = 0b01111111 ; instructionByte = 0x01 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, value) ; delay(I2C_DELAY) ; 
-							value = 0b00001111 ; instructionByte = 0x03 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, value) ; delay(I2C_DELAY) ; 
-							value = 0b00001111 ; instructionByte = 0x05 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, value) ; delay(I2C_DELAY) ; }
-						else if (bargraph_value == 16)
-						{ 	value = 0b11111111 ; instructionByte = 0x01 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, value) ; delay(I2C_DELAY) ; 
-							value = 0b00001111 ; instructionByte = 0x03 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, value) ; delay(I2C_DELAY) ; 
-							value = 0b00001111 ; instructionByte = 0x05 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, value) ; delay(I2C_DELAY) ; }
-		
-						else if (bargraph_value == 17)
-						{ 	value = 0b11111111 ; instructionByte = 0x01 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, value) ; delay(I2C_DELAY) ; 
-							value = 0b00011111 ; instructionByte = 0x03 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, value) ; delay(I2C_DELAY) ; 
-							value = 0b00001111 ; instructionByte = 0x05 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, value) ; delay(I2C_DELAY) ; 
-							value = 0b00010000 ; instructionByte = 0x02 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, value) ; delay(I2C_DELAY) ; }
-						else if (bargraph_value == 18)
-						{ 	value = 0b11111111 ; instructionByte = 0x01 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, value) ; delay(I2C_DELAY) ; 
-							value = 0b00111111 ; instructionByte = 0x03 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, value) ; delay(I2C_DELAY) ;
-							value = 0b00001111 ; instructionByte = 0x05 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, value) ; delay(I2C_DELAY) ;
-							value = 0b00110000 ; instructionByte = 0x02 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, value) ; delay(I2C_DELAY) ; }
-						else if (bargraph_value == 19)
-						{ 	value = 0b11111111 ; instructionByte = 0x01 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, value) ; delay(I2C_DELAY) ;
-							value = 0b01111111 ; instructionByte = 0x03 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, value) ; delay(I2C_DELAY) ;
-							value = 0b00001111 ; instructionByte = 0x05 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, value) ; delay(I2C_DELAY) ; 
-							value = 0b01110000 ; instructionByte = 0x02 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, value) ; delay(I2C_DELAY) ; }
-						else if (bargraph_value == 20)
-						{ 	value = 0b11111111 ; instructionByte = 0x01 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, value) ; delay(I2C_DELAY) ;
-							value = 0b11111111 ; instructionByte = 0x03 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, value) ; delay(I2C_DELAY) ;
-							value = 0b00001111 ; instructionByte = 0x05 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, value) ; delay(I2C_DELAY) ; 
-							value = 0b11110000 ; instructionByte = 0x02 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, value) ; delay(I2C_DELAY) ; }
-										
-						else if (bargraph_value == 21)
-						{ 	value = 0b11111111 ; instructionByte = 0x01 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, value) ; delay(I2C_DELAY) ;
-							value = 0b11111111 ; instructionByte = 0x03 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, value) ; delay(I2C_DELAY) ;
-							value = 0b00001111 ; instructionByte = 0x05 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, value) ; delay(I2C_DELAY) ; 
-							value = 0b11110000 ; instructionByte = 0x02 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, value) ; delay(I2C_DELAY) ; 
-							value = 0b00010000 ; instructionByte = 0x04 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, value) ; delay(I2C_DELAY) ; }
-						else if (bargraph_value == 22)
-						{ 	value = 0b11111111 ; instructionByte = 0x01 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, value) ; delay(I2C_DELAY) ;
-							value = 0b11111111 ; instructionByte = 0x03 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, value) ; delay(I2C_DELAY) ;
-							value = 0b00001111 ; instructionByte = 0x05 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, value) ; delay(I2C_DELAY) ; 
-							value = 0b11110000 ; instructionByte = 0x02 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, value) ; delay(I2C_DELAY) ; 
-							value = 0b00110000 ; instructionByte = 0x04 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, value) ; delay(I2C_DELAY) ; }
-						else if (bargraph_value == 23)
-						{ 	value = 0b11111111 ; instructionByte = 0x01 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, value) ; delay(I2C_DELAY) ;
-							value = 0b11111111 ; instructionByte = 0x03 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, value) ; delay(I2C_DELAY) ;
-							value = 0b00001111 ; instructionByte = 0x05 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, value) ; delay(I2C_DELAY) ; 
-							value = 0b11110000 ; instructionByte = 0x02 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, value) ; delay(I2C_DELAY) ; 
-							value = 0b01110000 ; instructionByte = 0x04 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, value) ; delay(I2C_DELAY) ; }
-						else if (bargraph_value == 24)
-						{ 	value = 0b11111111 ; instructionByte = 0x01 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, value) ; delay(I2C_DELAY) ;
-							value = 0b11111111 ; instructionByte = 0x03 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, value) ; delay(I2C_DELAY) ;
-							value = 0b00001111 ; instructionByte = 0x05 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, value) ; delay(I2C_DELAY) ; 
-							value = 0b11110000 ; instructionByte = 0x02 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, value) ; delay(I2C_DELAY) ; 
-							value = 0b11110000 ; instructionByte = 0x04 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, value) ; delay(I2C_DELAY) ; 
+//						printf("\n === value:%d - ratio:%f - dBu:%f - bargraph_length:%d - suplBits:%d ===", value, ratio, dB, bargraph_length, suplBits) ;
+
+						// no RED LEDs (all of them OFF)
+						bargraphRedBlackout = 0b00000000 ; instructionByte = 0x00 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, bargraphRedBlackout) ; delay(I2C_DELAY) ;
+						bargraphRedBlackout = 0b00000000 ; instructionByte = 0x02 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, bargraphRedBlackout) ; delay(I2C_DELAY) ;
+						bargraphRedBlackout = 0b00000000 ; instructionByte = 0x04 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, bargraphRedBlackout) ; delay(I2C_DELAY) ;
+
+						//GREEN LEDs now, depending the signal value
+						if (bargraph_length < 5)
+						{
+							bargraph_value = (0b00000000 << bargraph_length) | suplBits ; instructionByte = 0x01 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, bargraph_value) ; delay(I2C_DELAY) ;
+							bargraph_value = 0b00000000 ; instructionByte = 0x03 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, bargraph_value) ; delay(I2C_DELAY) ;
+							bargraph_value = 0b00000000 ; instructionByte = 0x05 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, bargraph_value) ; delay(I2C_DELAY) ;
+						}			
+						else if (bargraph_length > 4 && bargraph_length < 9)
+						{
+							bargraph_value = 0b00001111 ; instructionByte = 0x01 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, bargraph_value) ; delay(I2C_DELAY) ;
+							bargraph_value = (0b00000000 << bargraph_length) | suplBits ; instructionByte = 0x03 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, bargraph_value) ; delay(I2C_DELAY) ;
+							bargraph_value = 0b00000000 ; instructionByte = 0x05 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, bargraph_value) ; delay(I2C_DELAY) ;
+						}	
+						else if (bargraph_length > 8 && bargraph_length < 13)
+						{
+							bargraph_value = 0b00001111 ; instructionByte = 0x01 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, bargraph_value) ; delay(I2C_DELAY) ;
+							bargraph_value = 0b00001111 ; instructionByte = 0x03 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, bargraph_value) ; delay(I2C_DELAY) ;
+							bargraph_value = (0b00000000 << bargraph_length) | suplBits ; instructionByte = 0x05 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, bargraph_value) ; delay(I2C_DELAY) ;
+						}	
+						else if (bargraph_length > 12 && bargraph_length < 17)
+						{							
+							bargraph_value = ((0b00001111 << (bargraph_length -12)) | suplBits) ; instructionByte = 0x01 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, bargraph_value) ; delay(I2C_DELAY) ;
+							bargraph_value = 0b00001111 ; instructionByte = 0x03 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, bargraph_value) ; delay(I2C_DELAY) ;
+							bargraph_value = 0b00001111 ; instructionByte = 0x05 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, bargraph_value) ; delay(I2C_DELAY) ;
+						}	
+						else if (bargraph_length > 16 && bargraph_length < 21)
+						{	
+							bargraph_value = 0b11111111 ; instructionByte = 0x01 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, bargraph_value) ; delay(I2C_DELAY) ;
+							bargraph_value = (0b00001111 << (bargraph_length -16) | suplBits) ; instructionByte = 0x03 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, bargraph_value) ; delay(I2C_DELAY) ;
+							bargraph_value = 0b00001111 ; instructionByte = 0x05 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, bargraph_value) ; delay(I2C_DELAY) ;
+							bargraph_value = ((0b00000000 | suplBits) << 4) ; instructionByte = 0x02 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, bargraph_value) ; delay(I2C_DELAY) ;
+						}	
+						else if (bargraph_length > 20 && bargraph_length < 25)
+						{
+							bargraph_value = 0b11111111 ; instructionByte = 0x01 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, bargraph_value) ; delay(I2C_DELAY) ;
+							bargraph_value = 0b11111111 ; instructionByte = 0x03 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, bargraph_value) ; delay(I2C_DELAY) ;
+							bargraph_value = 0b00001111 ; instructionByte = 0x05 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, bargraph_value) ; delay(I2C_DELAY) ;
+							bargraph_value = 0b11110000 ; instructionByte = 0x02 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, bargraph_value) ; delay(I2C_DELAY) ;
+							bargraph_value = ((0b00000000 | suplBits) << 4) ; instructionByte = 0x04 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, bargraph_value) ; delay(I2C_DELAY) ;
+						}	
+						if (value == 255)
+						{ 	
+							bargraph_value = 0b00001111 ; instructionByte = 0x03 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, bargraph_value) ; delay(I2C_DELAY) ; // the 4 amber LEDs change to RED only ar max value (255)
 						}
 					}
 					break ;
@@ -577,11 +539,10 @@ int bargraphWrite(char *bargraph_label, float low_Limit, float high_Limit, int b
 				{
 					if (bargraph->bargraph_ref == "adafruit1721")
 					{ 	// found one
-//						value = 255 ;  // temporary value for test
 						int values = 256 ;
 						int zerodB = 255 ;
 						int ledsQty = bargraph->bargraph_steps ; // 24 apparent steps
-						int ledStep_dB = 2 ; // each LED bar one more step = 2 dB x 24 LEDs = 48 dB of dynamic
+						int ledStep_dB = 2 ; // each LED bar one more step = 2 dB x 24 LEDs = 48 dB of dynamic = 8 bits !
 						int bargraph_length = 0 ; // how many GREEN LEDs ON, 0 to 24
 						int bargraph_value = 0 ; // value which will be realy sent to bargraph to display through I2C
 						int suplBits = 0 ; // used to add few LSB to bargraph_Value
@@ -589,14 +550,24 @@ int bargraphWrite(char *bargraph_label, float low_Limit, float high_Limit, int b
 						int bargraphRedBlackout ;
 						
 						// log variation	
-//						float ratio = (float) ((values/2)-value) / ((values/2)-1) ;  // Input value / 1/2 Full Scale
-//						ratio = abs(ratio*1000) ;
-//						ratio = ratio / 1000 ;
-						float ratio = (float) (values - value) / (values -1) ;  // Input value / Full Scale
-						float dB = - 20 * log10(ratio) ;
-						bargraph_length = dB / ledStep_dB ;
-
-//						value = value + 100 ; // kind of gain to read small values higher on the bargraph scale
+						float ratio = (float) value / zerodB ;  // Input value / Full Scale
+						float dB = 20 * log10(ratio) ;
+						bargraph_length = 25 + (dB / ledStep_dB) ;
+						
+						// few manual cosmetic corrections for first steps
+						switch(value)
+						{
+							case 1 : bargraph_length = 1 ; break ; // the smallerst value to display on first LED  
+							case 2 : bargraph_length = 2 ; break ; 
+							case 3 : bargraph_length = 3 ; break ; 
+							case 4 : bargraph_length = 4 ; break ; 
+							case 5 : bargraph_length = 5 ; break ; 
+							case 6 : bargraph_length = 6 ; break ; 
+							case 7 : bargraph_length = 7 ; break ; 
+							case 8 : bargraph_length = 8 ; break ; 
+							case 9 : bargraph_length = 9 ; break ; 
+							default: break ;
+						}
 
 						if (bargraph_length > bargraph->bargraph_value)
 						{
@@ -604,14 +575,10 @@ int bargraphWrite(char *bargraph_label, float low_Limit, float high_Limit, int b
 						}
 						else 
 						{
-							bargraph->bargraph_value = bargraph->bargraph_value -1 ; // slowly decrease the enlighted bargraph length
+							if ((bargraph->bargraph_value > 0) && (bargraph_length <  bargraph->bargraph_value)) { bargraph->bargraph_value = bargraph->bargraph_value -1 ; }  // slowly decreases the enlighted bargraph length
 							bargraph_length = bargraph->bargraph_value ;
 						}
-					
-						// fix values only for manual tests
-//						bargraph_length = 24 ;
-//						value = 255 ;
-					
+						// display enlight LEDs depending bargraph_length from 0 to 24, then enlight a last RED LED if value = 255
 						if (bargraph_length == 0)
 						{
 							suplBits = 0 ;
@@ -633,7 +600,7 @@ int bargraphWrite(char *bargraph_label, float low_Limit, float high_Limit, int b
 							suplBits = 0b1111 ;
 						}
 						
-//						printf("\n === value:%d - ratio:%3.2f - dBu:%3.2f - bargraph_length:%d - bargraph_value:%d - suplBits:%d ===", value, ratio, dB, bargraph_length, bargraph_value, suplBits) ;
+//						printf("\n === value:%d - ratio:%f - dBu:%f - bargraph_length:%d - suplBits:%d ===", value, ratio, dB, bargraph_length, suplBits) ;
 
 						// no RED LEDs (all of them OFF)
 						bargraphRedBlackout = 0b00000000 ; instructionByte = 0x00 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, bargraphRedBlackout) ; delay(I2C_DELAY) ;
@@ -647,31 +614,31 @@ int bargraphWrite(char *bargraph_label, float low_Limit, float high_Limit, int b
 							bargraph_value = 0b00000000 ; instructionByte = 0x03 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, bargraph_value) ; delay(I2C_DELAY) ;
 							bargraph_value = 0b00000000 ; instructionByte = 0x05 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, bargraph_value) ; delay(I2C_DELAY) ;
 						}			
-						else if (bargraph_length > 4 & bargraph_length < 9)
+						else if (bargraph_length > 4 && bargraph_length < 9)
 						{
 							bargraph_value = 0b00001111 ; instructionByte = 0x01 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, bargraph_value) ; delay(I2C_DELAY) ;
 							bargraph_value = (0b00000000 << bargraph_length) | suplBits ; instructionByte = 0x03 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, bargraph_value) ; delay(I2C_DELAY) ;
 							bargraph_value = 0b00000000 ; instructionByte = 0x05 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, bargraph_value) ; delay(I2C_DELAY) ;
 						}	
-						else if (bargraph_length > 8 & bargraph_length < 13)
+						else if (bargraph_length > 8 && bargraph_length < 13)
 						{
 							bargraph_value = 0b00001111 ; instructionByte = 0x01 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, bargraph_value) ; delay(I2C_DELAY) ;
 							bargraph_value = 0b00001111 ; instructionByte = 0x03 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, bargraph_value) ; delay(I2C_DELAY) ;
 							bargraph_value = (0b00000000 << bargraph_length) | suplBits ; instructionByte = 0x05 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, bargraph_value) ; delay(I2C_DELAY) ;
 						}	
-						else if (bargraph_length > 12 & bargraph_length < 17)
+						else if (bargraph_length > 12 && bargraph_length < 17)
 						{							
 							bargraph_value = ((0b00001111 << (bargraph_length -12)) | suplBits) ; instructionByte = 0x01 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, bargraph_value) ; delay(I2C_DELAY) ;
 							bargraph_value = 0b00001111 ; instructionByte = 0x03 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, bargraph_value) ; delay(I2C_DELAY) ;
 							bargraph_value = 0b00001111 ; instructionByte = 0x05 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, bargraph_value) ; delay(I2C_DELAY) ;
 						}	
-						else if (bargraph_length > 16 & bargraph_length < 21)
+						else if (bargraph_length > 16 && bargraph_length < 21)
 						{	
 							bargraph_value = 0b11111111 ; instructionByte = 0x01 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, bargraph_value) ; delay(I2C_DELAY) ;
 							bargraph_value = (0b00001111 << (bargraph_length -16) | suplBits) ; instructionByte = 0x03 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, bargraph_value) ; delay(I2C_DELAY) ;
 							bargraph_value = 0b00001111 ; instructionByte = 0x05 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, bargraph_value) ; delay(I2C_DELAY) ;
 						}	
-						else if (bargraph_length > 20 & bargraph_length < 25)
+						else if (bargraph_length > 20 && bargraph_length < 25)
 						{
 							bargraph_value = 0b11111111 ; instructionByte = 0x01 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, bargraph_value) ; delay(I2C_DELAY) ;
 							bargraph_value = 0b11111111 ; instructionByte = 0x03 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, bargraph_value) ; delay(I2C_DELAY) ;
@@ -679,8 +646,8 @@ int bargraphWrite(char *bargraph_label, float low_Limit, float high_Limit, int b
 						}	
 						if (value == 255)
 						{ 	
-							bargraph_value = 0b11111111 ; instructionByte = 0x01 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, bargraph_value) ; delay(I2C_DELAY) ;
-							bargraph_value = 0b11111111 ; instructionByte = 0x03 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, bargraph_value) ; delay(I2C_DELAY) ;
+//							bargraph_value = 0b11111111 ; instructionByte = 0x01 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, bargraph_value) ; delay(I2C_DELAY) ;
+//							bargraph_value = 0b11111111 ; instructionByte = 0x03 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, bargraph_value) ; delay(I2C_DELAY) ;
 							bargraph_value = 0b01111111 ; instructionByte = 0x05 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, bargraph_value) ; delay(I2C_DELAY) ;
 							bargraph_value = 0b10000000 ; instructionByte = 0x04 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, bargraph_value) ; delay(I2C_DELAY) ; // the last RED LED point if 255
 						}
@@ -692,9 +659,10 @@ int bargraphWrite(char *bargraph_label, float low_Limit, float high_Limit, int b
 			}
 		}
 	}
-		
 	return x ;
 }
+
+//======================================================================
 
 void bargraphBlackOut(int setUpIO)
 {	
