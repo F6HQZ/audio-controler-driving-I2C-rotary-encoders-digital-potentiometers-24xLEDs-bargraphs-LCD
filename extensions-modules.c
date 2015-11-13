@@ -70,9 +70,6 @@ int numberofmodules = 0 ; // as writed, number of bargraphs, will be modified by
 
 //======================================================================
 
-
-//======================================================================
-
 struct extension_module *setupModule(char *module_label, 
 	char *module_input_name_0, char *module_input_name_1, 
 	char *module_input_name_2, char *module_input_name_3, 
