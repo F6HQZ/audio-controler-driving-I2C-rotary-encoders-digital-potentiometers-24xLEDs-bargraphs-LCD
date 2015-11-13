@@ -69,6 +69,7 @@ int numberofdigipots = 0 ; // as writed, number of digipots, will be modified by
 int updateOneDigipot(char *digipot_label, int wiper_value) ; // store all values in Raspi RAM
 double digipotRead(char *digipot_label) ; // Read from digipot
 int digipotWrite(char *digipot_label) ; // Write to digipot
+int checkOneDigipot(char *digipot_label) ; // for chip tests only
 
 //======================================================================
 
@@ -98,16 +99,7 @@ int updateOneDigipot(char *digipot_label, int wiper_value)
 */					
 					digipot->digipot_value[loop] = wiper_value ; // store the wiper value in Raspi local memory
 				}	
-/*				else if (digipot->digipot_reference =="HP16K33")
-				{
-					int slaveAddressByte = digipot->digipot_address << 1 | 0b0 ; // prepare the first byte including the internal sub digipot address, only for displaying and tests, because it's sent automaticaly by wiringpi itself, don't care !	
-					int instructionByte = loop << 5 ; // this is the "int reg", the second I2C byte sent by wiringpi
-
-					bargraphWrite(digipot->digipot_setUpIO, wiper_value) ; 
-									
-					digipot->digipot_value[0] = wiper_value ; // store the wiper value in Raspi local memory
-				}	
-*/				
+			
 				int x = -1 ;
 				x = wiringPiI2CRead(digipot->digipot_setUpIO) ;	
 				
@@ -184,6 +176,45 @@ double digipotRead(char *digipot_label)
 	}
 //	printf("sortie de boucle 2 \n") ;
 	return x ;
+}
+
+//======================================================================
+
+int checkOneDigipot(char *digipot_label) // for chip tests only
+{
+	int wiper_value = -1 ;
+	
+	struct digipot *digipot = digipots ;	
+	for (; digipot < digipots + numberofdigipots ; digipot++)
+	{
+		int found = 0 ;
+		int loop = 0 ;
+		for (; loop < digipot->digipot_channels ; loop++)
+		{
+			if (digipot_label == digipot->digipot_label[loop])
+			{
+				if (digipot->digipot_reference == "AD5263") // chip from Analog Device
+				{
+					int slaveAddressByte = digipot->digipot_address << 1 | 0b0 ; // prepare the first byte including the internal sub digipot address, only for displaying and tests, because it's sent automaticaly by wiringpi itself, don't care !	
+					int instructionByte = loop << 5 ; // this is the "int reg", the second I2C byte sent by wiringpi
+					printf("\n * checking values of DIGIPOT:[%d]: \"%s\" \n", loop, digipot->digipot_label[loop]) ;
+					
+					wiper_value = 0 ;
+					for (; wiper_value < 256 ; wiper_value++)
+					{
+						wiringPiI2CWriteReg8(digipot->digipot_setUpIO, instructionByte, wiper_value) ; // send the complete I2C frame to the chip
+						if (wiper_value == 0) { delay(1500) ; } else { delay(10) ; } // let the time to any mechanical galvanometer to reset for low values measurement
+					}
+					printf("-- done --\n\n") ;
+				}
+				
+				found = 1 ;
+				break ;	
+			}
+		}
+		if (found == 1) { break ; }
+	}
+	return wiper_value ;
 }
 
 //======================================================================
