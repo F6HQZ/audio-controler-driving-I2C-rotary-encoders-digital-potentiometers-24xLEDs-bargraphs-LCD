@@ -64,7 +64,7 @@ struct extension_module
 {
 	char *module_label ;  // name given to this chip, as "CONVERTER#1", as a reminder of "what is this $#% of chip for ?"
 	char *module_input_name[MAX_CHANNELS] ;  // name or label as "INPUT", "VOLUME" or "STAGE1" or "OUTPUT", etc... for each chip I/O channel
-	char *module_type ;   // type of chip, PCF8591, or of the described chips at top of this file
+	char *module_type ;   // type of chip, PCF8591, or any of the described chips at top of this file
 	char *module_bus_type ; // 0 for I2C or 1 for SPI
 	int module_address ;  // address of the chip on the I2C or SPI bus (check with "gpio i2cdetect" Linux console instruction)
 	int module_pinBase ;  // first pin (base) address, need to be different for each converter and >64
