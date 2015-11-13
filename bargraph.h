@@ -83,7 +83,7 @@ struct bargraph
 	int bargraph_steps ;    // number of LEDs steps without counting colors, only what is visible when lights turned OFF
 	unsigned char bargraph_bicolor ;  // 1 or 2. Number of different colors/LEDs (ex: GREEN and RED LEDs = 2, ORANGE is ONLY this 2 colors ON simultaneously.)
 	unsigned char bargraph_reversed ; // 0: no - 1: yes - left to right or right to left, depending hardware integration in a front pannel
-	long int bargraph_value ; // memory, for balistic use (decay tempo, etc...) 
+	int bargraph_value ; // memory, for balistic use (decay tempo, etc...) 
 	int bargraph_setUpIO ;  // used to point to the correct I2C system object by wiringPi
 };
 
