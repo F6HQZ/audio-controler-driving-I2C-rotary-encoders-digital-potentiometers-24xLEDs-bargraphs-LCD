@@ -8,7 +8,7 @@ This project will grow in features (WEB GUI, recorded prefered values, Midi Inte
 
 This work is for my Electric Guitar Valves Preamp project initiated 3 years ago. It will drive all the features of my preamp.
 
-You can contact me for any discussion or help regarding this project at F6HQZ@hamwlan.net
+You can contact me for any discussion or help regarding this project at F6HQZ-m@hamwlan.net
 
-Have fun adn ggod music !
+Have fun and good music !
 
