@@ -92,8 +92,12 @@
 
 extern int speed ;
 
+int voltmeterInput ; // select one of the 4 AD converter inputs;
 unsigned long int voltmeterReadingInterval = 1 ; // microsecondes
-unsigned long int voltmeterTimer ;
+unsigned int voltmeterTempo = 500 ; // bargraph is displaying voltmeter measurement a while (ms) after stop to play with knobs (rotary encoders)
+unsigned long int voltmeterTimer ; // to let some time between two consecutive measurements
+unsigned long int voltmeterTimer2 ; // used to let the Bargraph displaying the Rotary Encoder postion before to display the real time measured audio value, works with "voltmeterTempo"
+char VuMeterWakeUp = 0 ;
 
 void pwmWrite (int pin, int value) ;
 
@@ -101,8 +105,10 @@ extern void displayInit (void) ;
 extern void displayShow (char *line1, char *line2) ;
 extern int bargraphInit (void) ;
 
+// =====================================================================
+
 int main (void)
-{
+{	
 	printf("\n * ROTARY ENCODER DEMO SOFTWARE FOR RASPBERRY PI * \n\n");
 
 	wiringPiSetup () ;
@@ -112,7 +118,7 @@ int main (void)
 /*	LEDs (outputs)
 	enlighted for 2 sec at starting to check them, 
 	then when moving values up or down 
-*/
+
 	pinMode (25,OUTPUT) ;			// output to drive LED
 	pinMode (29,OUTPUT) ;			// output to drive LED
 	digitalWrite (25,ON) ;			// ON
@@ -122,7 +128,8 @@ int main (void)
 	delay (2000) ;					// mS
 	digitalWrite (25,OFF) ;			// OFF
 	digitalWrite (29,OFF) ;			// OFF
- 
+*/
+
  /*
  *  Please, see variables meaning in the rotaryencoder.c and rotaryencoder.h files
  *  and adapt them to your case, suppress or add the neccessary encoders and witches
@@ -132,17 +139,35 @@ int main (void)
  	printf("rotary encoders declaration start \n") ;
 	// rotary encoders declaration :
 	struct encoder *encoder = 
-	setupencoder ("GAIN","DIGIPOTGAIN",    0,2,YES,NO,NO,0,255,50,500000,30000,15000,6000,10,25,50) ;  // pins 0 and 2
-	setupencoder ("VOLUME","DIGIPOTVOLUME",    3,4,YES,NO,NO,0,255,25,500000,30000,15000,6000,10,25,50) ;  // pins 3 and 4
-	setupencoder ("OUTPUT","DIGIPOTOUTPUT",5,6,YES,NO,NO,0,255, 0,500000,30000,15000,6000,10,25,50) ;  // pins 5 and 6
+	setupencoder ("GAIN","DIGIPOTGAIN",     0,2,YES,NO,NO,0,255,50,500000,30000,15000,6000,10,25,50) ;  // pins 0 and 2
+	setupencoder ("VOLUME","DIGIPOTVOLUME", 3,4,YES,NO,NO,0,255,25,500000,30000,15000,6000,10,25,50) ;  // pins 3 and 4
+	setupencoder ("OUTPUT","DIGIPOTOUTPUT", 5,6,YES,NO,NO,0,255, 0,500000,30000,15000,6000,10,25,50) ;  // pins 5 and 6
 	printf("rotary encoders declaration end \n") ;
 	
 	printf("buttons declaration start \n") ;
 	// their axis buttons (or any buttons) are there :
 	struct button *button = 
-	setupbutton("GAIN",7,1) ;  // pin  7 and ON  at starting
-	setupbutton("VOLUME",21,0) ;   // pin 21 and OFF at starting
-	setupbutton("OUTPUT",22,0) ;  // pin 22 and OFF at starting
+//	setupbutton("Button0",  0,1) ; // used by a rotary encoder
+	setupbutton("Button1",  1,1) ; // pin 1 and at "1" level at starting (default input level when buton not pulling down when pushed)
+//	setupbutton("Button2",  2,1) ; // used by a rotary encoder
+//	setupbutton("Button3",  3,1) ; // used by a rotary encoder
+//	setupbutton("Button4",  4,1) ; // used by a rotary encoder
+//	setupbutton("Button5",  5,1) ; // used by a rotary encoder
+//	setupbutton("Button6",  6,1) ; // used by a rotary encoder
+	setupbutton("GAIN",     7,1) ; // pin 7 and at "1" level at starting (default input level when buton not pulling down when pushed)
+	setupbutton("Button8", 10,1) ; // 
+	setupbutton("Button9", 11,1) ; // 
+	setupbutton("Button10",12,1) ; // 
+	setupbutton("Button11",13,1) ; // 
+	setupbutton("Button12",14,1) ; // 
+	setupbutton("VOLUME",  21,1) ; // 
+	setupbutton("OUTPUT",  22,1) ; // 
+	setupbutton("Button2", 23,1) ; // 
+	setupbutton("Button3", 25,1) ; // 
+	setupbutton("Button4", 26,1) ; // 
+	setupbutton("Button5", 27,1) ; // 
+	setupbutton("Button6", 28,1) ; // 
+	setupbutton("Button7", 29,1) ; // 
 	printf("buttons declaration end \n") ;
 	
 	printf("digipots declaration start \n") ;
@@ -172,8 +197,6 @@ int main (void)
 	
 	long int memo_rotary[numberofencoders] ; // record the rotary encoder value for modification detection later
 	long int memo_button[numberofbuttons] ;  // record the button value for modification detection later
-//	char *bargraphInput ;
-	int voltmeterInput ;
 
 	//display to HDMI screen the components list :
 	printf("\nDIGIPOTS list :\n-----------------\n") ;
@@ -217,7 +240,7 @@ int main (void)
 
 	if (bargraphInit() < 0) { printf("bargrapInit: Unable to intialise: %s\n", strerror(errno)) ; } // bargraph init sequence
 	
-	// =====================================================================
+	// =================================================================
 	// digipots values test
 /*	digipot = digipots ;
 	for (; digipot < digipots + numberofdigipots ; digipot++)
@@ -230,7 +253,8 @@ int main (void)
 		}
 	}
 */
-	// =====================================================================
+
+	// =================================================================
 	// main loop is starting here :
 	while (1)
 	{
@@ -316,13 +340,12 @@ int main (void)
 			++step ;	
 		}	
 		
-		// select what analog input value to use for last "touched" rotary encoder
+		// modify what is displayed on LCD and BARGRAPH when touched any rotary encoder
 		if ((touched != "0") && (touched != "1"))
-		{	// found the correct input to use for measurments
-//			printf("\n > touched:%s %d", touched, touched) ;
+		{	// printf("\n > touched:%s %d", touched, touched) ;
 			struct extension_module *extension_module = modules ;
 			for (; extension_module < modules + numberofmodules ; extension_module++)
-			{ 
+			{ 	// select what analog input value to use for last "touched" rotary encoder
 				int loop = 0 ;					
 				for (; loop < MAX_CHANNELS ; loop++)
 				{
@@ -335,17 +358,15 @@ int main (void)
 				if (voltmeterInput > 0) { break ; }
 			}
 //			printf("\n >>> touched:%s - voltmeterInput:%d", touched, voltmeterInput) ;
-
 			// display the values on bargraph and LCD
-			displayShow("", "") ; // restart backlight of any LCD display
+			displayShow("", "") ; // restart immediatly the LCD display backlight without to delete the already displayed info
 			struct encoder *encoder = encoders ;
 			for (; encoder < encoders + numberofencoders ; encoder++)
 			{
 				if (encoder->label == touched)
-				{
+				{	// temporary display encoder value on Bargraph when turning or pushing it
 					bargraphWrite("BARGRAPH", encoder->low_Limit, encoder->high_Limit, 0, encoder->value) ; // display encoder position value to Bargraph
-					//-----------------------------------------------------------------			
-					// display encoder position value to LCD Display
+					// display digipot position value and attenuation in dB to LCD Display
 					struct digipot *digipot = digipots ;	
 					for (; digipot < digipots + numberofdigipots ; digipot++)
 					{
@@ -365,17 +386,18 @@ int main (void)
 						}
 						if (found) { break ; }
 					}
-					//----------------------------------------------------------------------	
+					VuMeterWakeUp = 1 ; // to restart to display measured value to bargraph
 					break ;
 				}
-
 			}
 			touched = "0" ; // reset the touched value
+			voltmeterTimer2 = millis() ; // reset pause measurement timer
 			print = 1 ; // display on video screen for debugging
 		}	
 		
 		// it's time to return to analog measurements
-		if ((backlightStatus == OFF) && ((micros() - voltmeterTimer) > voltmeterReadingInterval))
+//		if ((backlightStatus == OFF) && ((micros() - voltmeterTimer) > voltmeterReadingInterval))
+		if (((millis() - voltmeterTimer2) > voltmeterTempo ) && ((micros() - voltmeterTimer) > voltmeterReadingInterval))
 		{	// read the analog input and update the bargraph value
 			int peakValue = 0 ;
 			int value = 0 ;
@@ -394,7 +416,7 @@ int main (void)
 //				printf("loop:%d - value:%d - peakValue:%d - ", loop, value, peakValue) ;
 			}
 			bargraphWrite("BARGRAPH", 0, 255, 2, (long int) peakValue) ; // datas : bargraph name, min, max, VU-Meter type: 1 normal linear with one long green bar zone + 1 small amber bar + 1 small red bar, 2 same but logarythmic, 3 Digital log Peak meter ie green bar and only one RED (for max value)
-			voltmeterTimer = micros() ;
+			voltmeterTimer = micros() ; // reset gap timer
 //			printf("\n ~~~ value:%d - sampleDuration:%d", value, sampleDuration) ;
 		}	
 		
