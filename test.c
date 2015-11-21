@@ -139,14 +139,14 @@ int main (void)
  	printf("rotary encoders declaration start \n") ;
 	// rotary encoders declaration :
 	struct encoder *encoder = 
-	setupencoder ("GAIN","DIGIPOT-GAIN",     0, 1,YES,NO,NO,0,255,50,500000,30000,15000,6000,10,25,50) ;  // pins 0 and 1, rotary encoder name, what linked digipot
-	setupencoder ("VOLUME","DIGIPOT-VOLUME", 2, 3,YES,NO,NO,0,255,25,500000,30000,15000,6000,10,25,50) ;  // pins 2 and 3
-	setupencoder ("GRAVE","DIGIPOT-GRAVE",   4, 5,YES,NO,NO,0,255, 0,500000,30000,15000,6000,10,25,50) ;  // pins 4 and 5
-	setupencoder ("MEDIUM","DIGIPOT-VOLUME", 6, 7,YES,NO,NO,0,255, 0,500000,30000,15000,6000,10,25,50) ;  // pins 6 and 7
-	setupencoder ("AIGUE","DIGIPOT-AIGUE",  10,11,YES,NO,NO,0,255, 0,500000,30000,15000,6000,10,25,50) ;  // pins 10 and 11
-	setupencoder ("BOUCLE","DIGIPOT-BOUCLE",12,13,YES,NO,NO,0,255, 0,500000,30000,15000,6000,10,25,50) ;  // pins 12 and 13
-	setupencoder ("SORTIE","DIGIPOT-SORTIE",14,21,YES,NO,NO,0,255, 0,500000,30000,15000,6000,10,25,50) ;  // pins 14 and 21
-	setupencoder ("CASQUE","DIGIPOT-CASQUE",22,23,YES,NO,NO,0,255, 0,500000,30000,15000,6000,10,25,50) ;  // pins 22 and 23
+	setupencoder ("GAIN",  "DIGIPOT-GAIN",   0, 1,YES,NO,NO,0,255, 50,500000,30000,15000,6000,10,25,50) ;  // pins 0 and 1, rotary encoder name, what linked digipot
+	setupencoder ("VOLUME","DIGIPOT-VOLUME", 2, 3,YES,NO,NO,0,255, 25,500000,30000,15000,6000,10,25,50) ;  // pins 2 and 3
+	setupencoder ("GRAVE", "DIGIPOT-GRAVE",  4, 5,YES,NO,NO,0,255,128,500000,30000,15000,6000,10,25,50) ;  // pins 4 and 5
+	setupencoder ("MEDIUM","DIGIPOT-MEDIUM", 6, 7,YES,NO,NO,0,255,128,500000,30000,15000,6000,10,25,50) ;  // pins 6 and 7
+	setupencoder ("AIGUE", "DIGIPOT-AIGUE", 10,11,YES,NO,NO,0,255,128,500000,30000,15000,6000,10,25,50) ;  // pins 10 and 11
+	setupencoder ("BOUCLE","DIGIPOT-BOUCLE",12,13,YES,NO,NO,0,255,  0,500000,30000,15000,6000,10,25,50) ;  // pins 12 and 13
+	setupencoder ("SORTIE","DIGIPOT-SORTIE",14,21,YES,NO,NO,0,255,  0,500000,30000,15000,6000,10,25,50) ;  // pins 14 and 21
+	setupencoder ("CASQUE","DIGIPOT-CASQUE",22,23,YES,NO,NO,0,255,  0,500000,30000,15000,6000,10,25,50) ;  // pins 22 and 23
 	printf("rotary encoders declaration end \n") ;
 	
 	printf("buttons declaration start \n") ;
@@ -189,18 +189,18 @@ int main (void)
 	setupbargraph("BARGRAPH",0x70,"adafruit1721",24,2,NO) ; // name, I2C address, ref, LEDs number, colors, installed reversed
 	printf("bargraphs declaration end \n") ;
 	
-	printf("A/D D/A converters declaration start \n") ;
+	printf("A/D D/A converters and Digit I/O extensions modules declaration start \n") ;
 	// converters modules declaration :
 	struct extension_module *extension_module =
-	setupModule("ANALOG-CONVERTER#1","GAIN","VOLUME","SORTIE","CASQUE","","","","","PCF8591","0",0x48,200) ; // name, name of chan#0, chan#1, chan#2, chan#3, chan#4, chan#5, chan#6, chan#7, chip type, bus type, bus address, I/O pins base (>64 and different of the others)
-	setupModule("DIGITAL-OUTPUT#1","RELAY#1","RELAY#2","RELAY#3","RELAY#4","RELAY#5","RELAY#6","RELAY#7","RELAY#8","PCF8574","0",0x3e,210) ; // name, name of chan#0, chan#1, chan#2, chan#3, chan#4, chan#5, chan#6, chan#7, chip type, bus type, bus address, I/O pins base (>64 and different of the others)
-	printf("A/D D/A converters declaration end \n") ;
+	setupModule("ANALOG-CONVERTER#1","GAIN","VOLUME","SORTIE","CASQUE","","","","","PCF8591","0",0x48,200,4) ; // name, name of chan#0, chan#1, chan#2, chan#3, chan#4, chan#5, chan#6, chan#7, chip type, bus type, bus address, I/O pins base (>64 and different of the others)
+	setupModule("DIGITAL-OUTPUT#1","RELAY#1","RELAY#2","RELAY#3","RELAY#4","RELAY#5","RELAY#6","RELAY#7","RELAY#8","PCF8574","0",0x3e,210,8) ; // name, name of chan#0, chan#1, chan#2, chan#3, chan#4, chan#5, chan#6, chan#7, chip type, bus type, bus address, I/O pins base (>64 and different of the others)
+	printf("A/D D/A converters and Digit I/O extensions modules declaration end \n") ;
 	
 	extern numberofencoders ;
 	extern numberofbuttons ;
 	extern numberofdigipots ;
 	extern numberofbargraphs ;
-	extern numberofpcf8591s ;
+	extern numberofmodules ;
 	
 	long int memo_rotary[numberofencoders] ; // record the rotary encoder value for modification detection later
 	long int memo_button[numberofbuttons] ;  // record the button value for modification detection later
@@ -222,7 +222,7 @@ int main (void)
 	for (; extension_module < modules + numberofmodules ; extension_module++)
 	{ 
 		int loop = 0 ;
-		for (; loop < MAX_CHANNELS ; loop++)
+		for (; loop < extension_module->module_channels ; loop++)
 			{
 				printf("EXTENSIONS-MODULE:[%d]: \"%s\" \n", loop, extension_module->module_input_name[loop]) ;
 			}
@@ -490,7 +490,7 @@ int main (void)
 			for (; extension_module < modules + numberofmodules ; extension_module++)
 			{ 
 				int loop = 0 ;					
-				for (; loop < MAX_CHANNELS ; loop++)
+				for (; loop < extension_module->module_channels ; loop++)
 				{
 					int voltmeterInput =  0 ;
 					voltmeterInput = extension_module->module_pinBase + loop ;
@@ -508,8 +508,8 @@ int main (void)
 					}
 					if (extension_module->module_type == "PCF8591")
 					{
-	//					printf ("###   Analog Input #%d  %5.2f (peak) \n", voltmeterInput, (double)value * 3.3 / 255) ; // for 3.3V powered
-						printf ("###   Analog Input #%d  %5.2f (peak) \n", voltmeterInput, (double)value * 5 / 255) ; // for 5V powered
+	//					printf ("### Analog Input #%d  %5.2f (peak) \n", voltmeterInput, (double)value * 3.3 / 255) ; // for 3.3V powered
+						printf ("### Analog Input #%d  %5.2f (peak) \n", voltmeterInput, (double)value * 5 / 255) ; // for 5V powered
 					}
 					else if (extension_module->module_type == "PCF8574")
 					{
