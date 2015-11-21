@@ -228,7 +228,7 @@ struct digipot *setupdigipot(char *digipot_bus_type, int digipot_address,
 	char *digipot_curve5, char *digipot_label6, char *digipot_curve6, 
 	char *digipot_label7, char *digipot_curve7) 
 {
-	int loop = 0 ;
+	int loop ;
 	
 	if (numberofdigipots > MAX_DIGIPOTS)
 	{
@@ -244,23 +244,51 @@ struct digipot *setupdigipot(char *digipot_bus_type, int digipot_address,
 	newdigipot->wiper_positions = wiper_positions ;      // 128 256 512 1024 positions from 0 to max value (A to B pot connectors)
 	newdigipot->digipot_channels = digipot_channels ;	 // number of independant digipots in the same IC : single, dual, quad, octo...
 	
-	newdigipot->digipot_label[0] = digipot_label0 ; // 8 labels for names for each independant pots in the same IC
-	newdigipot->digipot_curve[0] = digipot_curve0 ;  // linear ,log, antilog, whatever described in the library
-	newdigipot->digipot_label[1] = digipot_label1 ; 
-	newdigipot->digipot_curve[1] = digipot_curve1 ;
-	newdigipot->digipot_label[2] = digipot_label2 ; 
-	newdigipot->digipot_curve[2] = digipot_curve2 ;          
-	newdigipot->digipot_label[3] = digipot_label3 ;
-	newdigipot->digipot_curve[3] = digipot_curve3 ;
-	newdigipot->digipot_label[4] = digipot_label4 ;
-	newdigipot->digipot_curve[4] = digipot_curve4 ;         
-	newdigipot->digipot_label[5] = digipot_label5 ;
-	newdigipot->digipot_curve[5] = digipot_curve5 ;          
-	newdigipot->digipot_label[6] = digipot_label6 ;
-	newdigipot->digipot_curve[6] = digipot_curve6 ;          
-	newdigipot->digipot_label[7] = digipot_label7 ;
-	newdigipot->digipot_curve[7] = digipot_curve7 ;          
+	loop = 0 ;
+	for (; loop < digipot_channels ; loop++)
+	{
+		printf("loop:%d",loop) ;
+		switch(loop)
+		{
+			case 0:
+				newdigipot->digipot_label[0] = digipot_label0 ; // 8 labels for names for each independant pots in the same IC
+				newdigipot->digipot_curve[0] = digipot_curve0 ;  // linear ,log, antilog, whatever described in the library
+				break ;
+			case 1:
+				newdigipot->digipot_label[1] = digipot_label1 ; 
+				newdigipot->digipot_curve[1] = digipot_curve1 ;
+				break ;
+			case 2:
+				newdigipot->digipot_label[2] = digipot_label2 ; 
+				newdigipot->digipot_curve[2] = digipot_curve2 ;  
+				break ;
+			case 3:        
+				newdigipot->digipot_label[3] = digipot_label3 ;
+				newdigipot->digipot_curve[3] = digipot_curve3 ;
+				break ;
+			case 4:
+				newdigipot->digipot_label[4] = digipot_label4 ;
+				newdigipot->digipot_curve[4] = digipot_curve4 ;
+				break ;
+			case 5:
+				newdigipot->digipot_label[5] = digipot_label5 ;
+				newdigipot->digipot_curve[5] = digipot_curve5 ; 
+				break ;
+			case 6:
+				newdigipot->digipot_label[6] = digipot_label6 ;
+				newdigipot->digipot_curve[6] = digipot_curve6 ;
+				break ;
+			case 7:
+				newdigipot->digipot_label[7] = digipot_label7 ;
+				newdigipot->digipot_curve[7] = digipot_curve7 ;  
+				break ;
+			default:
+				printf("more than 8 channel !") ;
+				break ;   
+		}     
+	}
 
+	loop = 0 ;
 	for (; loop < digipot_channels ; loop++)
 	{
 		newdigipot->wiper_memo[loop] = 0 ; // record the last position before to shutdown, to restore value at restarting
