@@ -57,12 +57,15 @@
 #include <wiringPi.h>
 #include <wiringPiI2C.h>
 #include <pcf8591.h>
+#include <pcf8574.h>
 
 #include "extensions-modules.h"
 
 struct extension_module *setupModule(char *module_label, 
 	char *module_input_name_0, char *module_input_name_1, 
 	char *module_input_name_2, char *module_input_name_3, 
+	char *module_input_name_4, char *module_input_name_5,
+	char *module_input_name_6, char *module_input_name_7,
 	char *module_type, char *module_bus_type, int module_address, 
 	int module_pinBase) ; 
 	
@@ -73,12 +76,14 @@ int numberofmodules = 0 ; // as writed, number of bargraphs, will be modified by
 struct extension_module *setupModule(char *module_label, 
 	char *module_input_name_0, char *module_input_name_1, 
 	char *module_input_name_2, char *module_input_name_3, 
+	char *module_input_name_4, char *module_input_name_5,
+	char *module_input_name_6, char *module_input_name_7,
 	char *module_type, char *module_bus_type, int module_address, 
 	int module_pinBase)
 {
 	if (numberofmodules > MAX_MODULES)
 	{
-		printf("Max number of modules like pcf8591's exceded: %i\n", MAX_MODULES) ;
+		printf("Max number of modules like pcf8591's or pcf8574's exceeded: %i\n", MAX_MODULES) ;
 		return NULL ;
 	}
 	
@@ -94,11 +99,20 @@ struct extension_module *setupModule(char *module_label,
 	newmodule->module_input_name[1] = module_input_name_1 ; 
 	newmodule->module_input_name[2] = module_input_name_2 ; 
 	newmodule->module_input_name[3] = module_input_name_3 ; 
+	newmodule->module_input_name[4] = module_input_name_4 ; 
+	newmodule->module_input_name[5] = module_input_name_5 ; 
+	newmodule->module_input_name[6] = module_input_name_6 ; 
+	newmodule->module_input_name[7] = module_input_name_7 ; 	
 	
 	if (module_type == "PCF8591")
 	{
 		pcf8591Setup(module_pinBase, module_address) ;
 		printf("pcf8591#:0x%x I2C:0x%x Pinbase:%d - init done ! \n", modules, module_address, module_pinBase) ;
+	}
+	else if (module_type == "PCF8574")
+	{
+		pcf8574Setup(module_pinBase, module_address) ;
+		printf("pcf8574#:0x%x I2C:0x%x Pinbase:%d - init done ! \n", modules, module_address, module_pinBase) ;
 	}
 	
 	return newmodule ;
