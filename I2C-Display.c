@@ -76,7 +76,7 @@
 #define AF_D4	(AF_BASE + 7)
 #define LCD_DELAY	1	// needs some time between two sending to a LCD to avoid to turn it mad
 
-unsigned int backlightTempo = 3000 ; // the backlight cut off after a	while (ms), or never if 0
+unsigned int backlightTempo = 3000 ; // the backlight cut off after a while (ms), or never if 0
 unsigned long int backlightTimer ; // display backlight enlighting duration timer
 unsigned char backlightStatus ; // backlight ON or OFF status
 
