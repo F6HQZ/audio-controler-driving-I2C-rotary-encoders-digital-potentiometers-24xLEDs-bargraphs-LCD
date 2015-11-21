@@ -67,7 +67,7 @@ struct extension_module *setupModule(char *module_label,
 	char *module_input_name_4, char *module_input_name_5,
 	char *module_input_name_6, char *module_input_name_7,
 	char *module_type, char *module_bus_type, int module_address, 
-	int module_pinBase) ; 
+	int module_pinBase, char module_channels) ; 
 	
 int numberofmodules = 0 ; // as writed, number of bargraphs, will be modified by the code later
 
@@ -79,7 +79,7 @@ struct extension_module *setupModule(char *module_label,
 	char *module_input_name_4, char *module_input_name_5,
 	char *module_input_name_6, char *module_input_name_7,
 	char *module_type, char *module_bus_type, int module_address, 
-	int module_pinBase)
+	int module_pinBase, char module_channels)
 {
 	if (numberofmodules > MAX_MODULES)
 	{
@@ -88,21 +88,55 @@ struct extension_module *setupModule(char *module_label,
 	}
 	
 	struct extension_module *newmodule = modules + numberofmodules++ ;
-	newmodule->module_label = module_label ;         // name given to this chip, as "CONVERTER#1", as a reminder of "what is this $#% of chip for ?"
-	newmodule->module_type = module_type ;           // type of chip, PCF8591, or of the described chips at top of the "extensions-modules.h" file
-	newmodule->module_bus_type = module_bus_type ;   // 0 for I2C or 1 for SPI
-	newmodule->module_address = module_address ;     // address of the chip on the I2C or SPI bus (check with "gpio i2cdetect" Linux console instruction)
-	newmodule->module_pinBase = module_pinBase ;     // first pin (base) address, need to be different for each converter and >64
+	newmodule->module_label = module_label ;        // name given to this chip, as "CONVERTER#1", as a reminder of "what is this $#% of chip for ?"
+	newmodule->module_type = module_type ;          // type of chip, PCF8591, or of the described chips at top of the "extensions-modules.h" file
+	newmodule->module_bus_type = module_bus_type ;  // 0 for I2C or 1 for SPI
+	newmodule->module_address = module_address ;    // address of the chip on the I2C or SPI bus (check with "gpio i2cdetect" Linux console instruction)
+	newmodule->module_pinBase = module_pinBase ;    // first pin (base) address, need to be different for each converter and >64
+	newmodule->module_channels = module_channels ;  // number of available channels
 	
-	
-	newmodule->module_input_name[0] = module_input_name_0 ; // name or label as "INPUT", "VOLUME" or "STAGE1" or "OUTPUT", etc... for each chip I/O channel
-	newmodule->module_input_name[1] = module_input_name_1 ; 
-	newmodule->module_input_name[2] = module_input_name_2 ; 
-	newmodule->module_input_name[3] = module_input_name_3 ; 
-	newmodule->module_input_name[4] = module_input_name_4 ; 
-	newmodule->module_input_name[5] = module_input_name_5 ; 
-	newmodule->module_input_name[6] = module_input_name_6 ; 
-	newmodule->module_input_name[7] = module_input_name_7 ; 	
+	int loop = 0 ;
+	for (; loop < module_channels ; loop++)
+	{
+//		printf("loop:%d",loop) ;
+		switch(loop)
+		{
+			case 0:
+				newmodule->module_input_name[0] = module_input_name_0 ; // name or label as "INPUT", "VOLUME" or "STAGE1" or "OUTPUT", etc... for each chip I/O channel
+//				printf("name:%s",module_input_name_0) ;
+				break ;
+			case 1:
+				newmodule->module_input_name[1] = module_input_name_1 ; 
+//				printf("name:%s",module_input_name_1) ;
+				break ;
+			case 2:
+				newmodule->module_input_name[2] = module_input_name_2 ; 
+//				printf("name:%s",module_input_name_2) ;
+				break ;
+			case 3:
+				newmodule->module_input_name[3] = module_input_name_3 ; 
+//				printf("name:%s",module_input_name_3) ;
+				break ;
+			case 4:
+				newmodule->module_input_name[4] = module_input_name_4 ; 
+//				printf("name:%s",module_input_name_4) ;
+				break ;
+			case 5:
+				newmodule->module_input_name[5] = module_input_name_5 ; 
+//				printf("name:%s",module_input_name_5) ;
+				break ;
+			case 6:
+				newmodule->module_input_name[6] = module_input_name_6 ; 
+//				printf("name:%s",module_input_name_6) ;
+				break ;
+			case 7:
+				newmodule->module_input_name[7] = module_input_name_7 ; 
+//				printf("name:%s",module_input_name_7) ;
+				break ;
+			default:
+				break ;
+		}
+	}	
 	
 	if (module_type == "PCF8591")
 	{
