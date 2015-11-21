@@ -139,41 +139,47 @@ int main (void)
  	printf("rotary encoders declaration start \n") ;
 	// rotary encoders declaration :
 	struct encoder *encoder = 
-	setupencoder ("GAIN","DIGIPOTGAIN",     0,2,YES,NO,NO,0,255,50,500000,30000,15000,6000,10,25,50) ;  // pins 0 and 2
-	setupencoder ("VOLUME","DIGIPOTVOLUME", 3,4,YES,NO,NO,0,255,25,500000,30000,15000,6000,10,25,50) ;  // pins 3 and 4
-	setupencoder ("OUTPUT","DIGIPOTOUTPUT", 5,6,YES,NO,NO,0,255, 0,500000,30000,15000,6000,10,25,50) ;  // pins 5 and 6
+	setupencoder ("GAIN","DIGIPOT-GAIN",     0, 1,YES,NO,NO,0,255,50,500000,30000,15000,6000,10,25,50) ;  // pins 0 and 1, rotary encoder name, what linked digipot
+	setupencoder ("VOLUME","DIGIPOT-VOLUME", 2, 3,YES,NO,NO,0,255,25,500000,30000,15000,6000,10,25,50) ;  // pins 2 and 3
+	setupencoder ("GRAVE","DIGIPOT-GRAVE",   4, 5,YES,NO,NO,0,255, 0,500000,30000,15000,6000,10,25,50) ;  // pins 4 and 5
+	setupencoder ("MEDIUM","DIGIPOT-VOLUME", 6, 7,YES,NO,NO,0,255, 0,500000,30000,15000,6000,10,25,50) ;  // pins 6 and 7
+	setupencoder ("AIGUE","DIGIPOT-AIGUE",  10,11,YES,NO,NO,0,255, 0,500000,30000,15000,6000,10,25,50) ;  // pins 10 and 11
+	setupencoder ("BOUCLE","DIGIPOT-BOUCLE",12,13,YES,NO,NO,0,255, 0,500000,30000,15000,6000,10,25,50) ;  // pins 12 and 13
+	setupencoder ("SORTIE","DIGIPOT-SORTIE",14,21,YES,NO,NO,0,255, 0,500000,30000,15000,6000,10,25,50) ;  // pins 14 and 21
+	setupencoder ("CASQUE","DIGIPOT-CASQUE",22,23,YES,NO,NO,0,255, 0,500000,30000,15000,6000,10,25,50) ;  // pins 22 and 23
 	printf("rotary encoders declaration end \n") ;
 	
 	printf("buttons declaration start \n") ;
 	// their axis buttons (or any buttons) are there :
 	struct button *button = 
-//	setupbutton("Button0",  0,1) ; // used by a rotary encoder
-	setupbutton("Button1",  1,1) ; // pin 1 and at "1" level at starting (default input level when buton not pulling down when pushed)
-//	setupbutton("Button2",  2,1) ; // used by a rotary encoder
-//	setupbutton("Button3",  3,1) ; // used by a rotary encoder
-//	setupbutton("Button4",  4,1) ; // used by a rotary encoder
-//	setupbutton("Button5",  5,1) ; // used by a rotary encoder
-//	setupbutton("Button6",  6,1) ; // used by a rotary encoder
-	setupbutton("GAIN",     7,1) ; // pin 7 and at "1" level at starting (default input level when buton not pulling down when pushed)
-	setupbutton("Button8", 10,1) ; // 
-	setupbutton("Button9", 11,1) ; // 
-	setupbutton("Button10",12,1) ; // 
-	setupbutton("Button11",13,1) ; // 
-	setupbutton("Button12",14,1) ; // 
-	setupbutton("VOLUME",  21,1) ; // 
-	setupbutton("OUTPUT",  22,1) ; // 
-	setupbutton("Button2", 23,1) ; // 
-	setupbutton("Button3", 25,1) ; // 
-	setupbutton("Button4", 26,1) ; // 
-	setupbutton("Button5", 27,1) ; // 
-	setupbutton("Button6", 28,1) ; // 
-	setupbutton("Button7", 29,1) ; // 
+//	setupbutton("Button0",  0,1) ; // pin 0 and pin 1, already used by a rotary encoder
+//	setupbutton("Button1",  1,1) ; // already used by a rotary encoder
+//	setupbutton("Button2",  2,1) ; // already used by a rotary encoder
+//	setupbutton("Button3",  3,1) ; // already used by a rotary encoder
+//	setupbutton("Button4",  4,1) ; // already used by a rotary encoder
+//	setupbutton("Button5",  5,1) ; // already used by a rotary encoder
+//	setupbutton("Button6",  6,1) ; // already used by a rotary encoder
+//	setupbutton("Button7",  7,1) ; // already used by a rotary encoder
+//	setupbutton("Button8", 10,1) ; // already used by a rotary encoder
+//	setupbutton("Button9", 11,1) ; // already used by a rotary encoder
+//	setupbutton("Button10",12,1) ; // already used by a rotary encoder
+//	setupbutton("Button11",13,1) ; // already used by a rotary encoder
+//	setupbutton("Button12",14,1) ; // already used by a rotary encoder
+//	setupbutton("Button13",21,1) ; // already used by a rotary encoder
+//	setupbutton("Button14",22,1) ; // already used by a rotary encoder
+//	setupbutton("Button15",23,1) ; // already used by a rotary encoder
+	setupbutton("GAIN",    25,1) ; // pin 25, "1" level at starting (default input level when buton not pulling down when pushed due to pullup resistor presence programmed)
+	setupbutton("VOLUME",  26,1) ; 
+	setupbutton("BOUCLE",  27,1) ; 
+	setupbutton("SORTIE",  28,1) ; 
+	setupbutton("CASQUE",  29,1) ; 
 	printf("buttons declaration end \n") ;
 	
 	printf("digipots declaration start \n") ;
 	// digipots declaration :
 	struct digipot *digipot = 
-	setupdigipot("0",0x2c,4,"AD5263",20000,256,"DIGIPOTGAIN","LIN","DIGIPOTVOLUME","LOG","DIGIPOTOUTPUT","LIN","DIGIPOTTREMOLO","LIN","","","","","","","","") ; // 0=I2C (1=SPI), addr, channels, ref, Ohms, positions, name#1, name#2, name#3, name#4, ...
+	setupdigipot("0",0x2c,4,"AD5263",200000,256,"DIGIPOT-GAIN","LIN","DIGIPOT-VOLUME","LOG","DIGIPOT-GRAVE","LIN","DIGIPOT-MEDIUM","LIN","","","","","","","","") ; // 0=I2C (1=SPI), addr, channels, ref, Ohms, positions, name#1, name#2, name#3, name#4, ...
+	setupdigipot("0",0x2d,4,"AD5263",200000,256,"DIGIPOT-AIGUE","LIN","DIGIPOT-BOUCLE","LIN","DIGIPOT-SORTIE","LIN","DIGIPOT-CASQUE","LIN","","","","","","","","") ; // 0=I2C (1=SPI), addr, channels, ref, Ohms, positions, name#1, name#2, name#3, name#4, ...
 //	setupdigipot("0",0x70,1,"HP16K33",20000,0xffff,"BARGRAPH","","","","","","","","","","","") ; // 0=I2C (1=SPI), addr, channels, ref, Ohms, positions, name#1, name#2, name#3, name#4, ...
 	printf("digipots declaration end \n") ;
 	
@@ -184,9 +190,10 @@ int main (void)
 	printf("bargraphs declaration end \n") ;
 	
 	printf("A/D D/A converters declaration start \n") ;
-	// bargraphs declaration :
+	// converters modules declaration :
 	struct extension_module *extension_module =
-	setupModule("CONVERTER#1","GAIN","VOLUME","OUTPUT","LINE-OUTPUT","PCF8591","0",0x48,200) ; // name, name of chan#0, chan#1, chan#2, chan#3, chip type, I2C address, I/O pins base (>64 and different of the others)
+	setupModule("ANALOG-CONVERTER#1","GAIN","VOLUME","SORTIE","CASQUE","","","","","PCF8591","0",0x48,200) ; // name, name of chan#0, chan#1, chan#2, chan#3, chan#4, chan#5, chan#6, chan#7, chip type, bus type, bus address, I/O pins base (>64 and different of the others)
+	setupModule("DIGITAL-OUTPUT#1","RELAY#1","RELAY#2","RELAY#3","RELAY#4","RELAY#5","RELAY#6","RELAY#7","RELAY#8","PCF8574","0",0x3e,210) ; // name, name of chan#0, chan#1, chan#2, chan#3, chan#4, chan#5, chan#6, chan#7, chip type, bus type, bus address, I/O pins base (>64 and different of the others)
 	printf("A/D D/A converters declaration end \n") ;
 	
 	extern numberofencoders ;
@@ -499,9 +506,15 @@ int main (void)
 							peakValue = value ; // peak memo during few analog samples
 						}		
 					}
-//					printf ("### Analog Input #%d  %5.2f (peak) \n", voltmeterInput, (double)value * 3.3 / 255) ; // for 3.3V powered
-					printf ("### Analog Input #%d  %5.2f (peak) \n", voltmeterInput, (double)value * 5 / 255) ; // for 5V powered
-
+					if (extension_module->module_type == "PCF8591")
+					{
+	//					printf ("###   Analog Input #%d  %5.2f (peak) \n", voltmeterInput, (double)value * 3.3 / 255) ; // for 3.3V powered
+						printf ("###   Analog Input #%d  %5.2f (peak) \n", voltmeterInput, (double)value * 5 / 255) ; // for 5V powered
+					}
+					else if (extension_module->module_type == "PCF8574")
+					{
+						printf ("### Digital Input #%d  %d \n", voltmeterInput, value) ; 
+					}
 				} 
 			}
 			print = 0 ;
