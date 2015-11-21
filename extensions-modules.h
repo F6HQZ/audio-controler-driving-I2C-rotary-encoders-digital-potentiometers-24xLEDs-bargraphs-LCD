@@ -56,7 +56,7 @@
 #include "binary-values.h"
 
 #define MAX_MODULES 8  // or any you want with different I2C adresses
-#define MAX_CHANNELS 4 // how many channels in a chip
+#define MAX_CHANNELS 8 // how many channels in a chip
 
 // PCF8591 is an I2C A/D D/A converter, offering 4 A/D inputs and 1 D/A output.
 
@@ -76,5 +76,7 @@ struct extension_module modules[MAX_MODULES] ;
 struct extension_module *setupModule(char *module_label, 
 	char *module_input_name_0, char *module_input_name_1, 
 	char *module_input_name_2, char *module_input_name_3, 
+	char *module_input_name_4, char *module_input_name_5,
+	char *module_input_name_6, char *module_input_name_7,
 	char *module_type, char *module_bus_type, int module_address, 
 	int module_pinBase) ; 
