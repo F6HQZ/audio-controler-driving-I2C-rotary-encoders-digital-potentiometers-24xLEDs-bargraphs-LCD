@@ -56,12 +56,15 @@
 #include "digital-pot.h"
 
 struct digipot *setupdigipot(char *digipot_bus_type, int digipot_address, 
-	char digipot_channels, char *digipot_reference,	int digipot_ohms, 
-	int wiper_positions, char *digipot_label0, char *curve0, char *digipot_label1, 
-	char *curve1, char *digipot_label2, char *curve2, char *digipot_label3, 
-	char *curve3, char *digipot_label4, char *curve4, char *digipot_label5, 
-	char *curve5, char *digipot_label6, char *curve6, char *digipot_label7, 
-	char *curve7)  ; 
+	char digipot_channels, char *digipot_reference,	int digipot_ohms, int wiper_positions, 
+	char *digipot_label0, char *digipot_curve0, char *digipot_0_position0,
+	char *digipot_label1, char *digipot_curve1, char *digipot_0_position1, 
+	char *digipot_label2, char *digipot_curve2, char *digipot_0_position2,
+	char *digipot_label3, char *digipot_curve3, char *digipot_0_position3,
+	char *digipot_label4, char *digipot_curve4, char *digipot_0_position4,
+	char *digipot_label5, char *digipot_curve5, char *digipot_0_position5,
+	char *digipot_label6, char *digipot_curve6, char *digipot_0_position6,
+	char *digipot_label7, char *digipot_curve7, char *digipot_0_position7) ; 
 
 // don't change these init values :
 int numberofdigipots = 0 ; // as writed, number of digipots, will be modified by the code later
@@ -105,7 +108,20 @@ int updateOneDigipot(char *digipot_label, int wiper_value)
 				
 				// convert tap position to attenuation in dB
 				double tap = -(x - digipot->wiper_positions) ;
-				double ratio = ((digipot->wiper_positions - tap) / (digipot->wiper_positions -1)) ;
+				double ratio ;
+				if (digipot->digipot_0_position[loop] == "RIGHT")
+				{
+					ratio = ((digipot->wiper_positions - tap) / (digipot->wiper_positions -1)) ;
+				}
+				else if (digipot->digipot_0_position[loop] == "CENTER")
+				{
+					ratio = ((digipot->wiper_positions - tap) / ((digipot->wiper_positions/2) -1)) ;
+				}
+				else
+				{
+					printf("\n!!! ZERO position value not recognized !!!\n") ;
+					printf("ELSE-digipot->digipot_0_position[loop]:%s",digipot->digipot_0_position[loop]) ;
+				}
 				double dB = (20 * log10(ratio)) ;
 				digipot->digipot_att[loop] = dB ; // store the digipot attenuation in dB
 					
@@ -145,9 +161,22 @@ double digipotRead(char *digipot_label)
 				if (x > -1)
 				{	// convert tap position to attenuation in dB
 					double tap = -(x - digipot->wiper_positions) ;
-					double ratio = ((digipot->wiper_positions - tap) / (digipot->wiper_positions - 1)) ;
-					double dB = 1/(20 * log10(ratio)) ;
-						
+					double ratio ;
+					if (digipot->digipot_0_position[loop] == "RIGHT")
+					{
+						ratio = ((digipot->wiper_positions - tap) / (digipot->wiper_positions -1)) ;
+					}
+					else if (digipot->digipot_0_position[loop] == "CENTER")
+					{
+						ratio = ((digipot->wiper_positions - tap) / ((digipot->wiper_positions/2) -1)) ;
+					}
+					else
+					{
+						printf("\n!!! ZERO position value not recognized !!!\n") ;
+						printf("ELSE-digipot->digipot_0_position[loop]:%s",digipot->digipot_0_position[loop]) ;
+					}
+					double dB = (20 * log10(ratio)) ;
+					digipot->digipot_att[loop] = dB ; // store the digipot attenuation in dB
 //					printf("\n>>> Digipot Read response : x:%d - tap:%-0.0f - att:%0.2f(dB) \n", x, tap, dB) ;
 					
 /*					printf(">>> Digipot Read addr: Ox%x = %d - setUpIO: 0x%x = %d - slaveAddressByte: 0x%x = %d - instructionByte: 0x%x = %d - dataByte/att: 0x%x = %3.2f(dB) \n", 
@@ -220,16 +249,16 @@ int checkOneDigipot(char *digipot_label) // for chip tests only
 //======================================================================
 
 struct digipot *setupdigipot(char *digipot_bus_type, int digipot_address, 
-	char digipot_channels, char *digipot_reference,	int digipot_ohms, 
-	int wiper_positions, char *digipot_label0, char *digipot_curve0, 
-	char *digipot_label1, char *digipot_curve1, char *digipot_label2, 
-	char *digipot_curve2, char *digipot_label3, char *digipot_curve3, 
-	char *digipot_label4, char *digipot_curve4, char *digipot_label5, 
-	char *digipot_curve5, char *digipot_label6, char *digipot_curve6, 
-	char *digipot_label7, char *digipot_curve7) 
+	char digipot_channels, char *digipot_reference,	int digipot_ohms, int wiper_positions, 
+	char *digipot_label0, char *digipot_curve0, char *digipot_0_position0,
+	char *digipot_label1, char *digipot_curve1, char *digipot_0_position1, 
+	char *digipot_label2, char *digipot_curve2, char *digipot_0_position2,
+	char *digipot_label3, char *digipot_curve3, char *digipot_0_position3,
+	char *digipot_label4, char *digipot_curve4, char *digipot_0_position4,
+	char *digipot_label5, char *digipot_curve5, char *digipot_0_position5,
+	char *digipot_label6, char *digipot_curve6, char *digipot_0_position6,
+	char *digipot_label7, char *digipot_curve7, char *digipot_0_position7)
 {
-	int loop ;
-	
 	if (numberofdigipots > MAX_DIGIPOTS)
 	{
 		printf("Maximum number of digipots exceded: %i\n", MAX_DIGIPOTS) ;
@@ -244,43 +273,51 @@ struct digipot *setupdigipot(char *digipot_bus_type, int digipot_address,
 	newdigipot->wiper_positions = wiper_positions ;      // 128 256 512 1024 positions from 0 to max value (A to B pot connectors)
 	newdigipot->digipot_channels = digipot_channels ;	 // number of independant digipots in the same IC : single, dual, quad, octo...
 	
-	loop = 0 ;
+	int loop = 0 ;
 	for (; loop < digipot_channels ; loop++)
 	{
 		printf("loop:%d",loop) ;
 		switch(loop)
 		{
 			case 0:
-				newdigipot->digipot_label[0] = digipot_label0 ; // 8 labels for names for each independant pots in the same IC
-				newdigipot->digipot_curve[0] = digipot_curve0 ;  // linear ,log, antilog, whatever described in the library
+				newdigipot->digipot_label[0] = digipot_label0 ;           // 8 labels for names for each independant pots in the same IC
+				newdigipot->digipot_curve[0] = digipot_curve0 ;           // linear ,log, antilog, whatever described in the library
+				newdigipot->digipot_0_position[0] = digipot_0_position0 ; // ZERO dB position
 				break ;
 			case 1:
 				newdigipot->digipot_label[1] = digipot_label1 ; 
 				newdigipot->digipot_curve[1] = digipot_curve1 ;
+				newdigipot->digipot_0_position[1] = digipot_0_position1 ;
 				break ;
 			case 2:
 				newdigipot->digipot_label[2] = digipot_label2 ; 
-				newdigipot->digipot_curve[2] = digipot_curve2 ;  
+				newdigipot->digipot_curve[2] = digipot_curve2 ;
+				newdigipot->digipot_0_position[2] = digipot_0_position2 ;
 				break ;
 			case 3:        
 				newdigipot->digipot_label[3] = digipot_label3 ;
 				newdigipot->digipot_curve[3] = digipot_curve3 ;
+				newdigipot->digipot_0_position[3] = digipot_0_position3 ;
 				break ;
 			case 4:
 				newdigipot->digipot_label[4] = digipot_label4 ;
 				newdigipot->digipot_curve[4] = digipot_curve4 ;
+				newdigipot->digipot_0_position[4] = digipot_0_position4 ;
 				break ;
 			case 5:
 				newdigipot->digipot_label[5] = digipot_label5 ;
-				newdigipot->digipot_curve[5] = digipot_curve5 ; 
+				newdigipot->digipot_curve[5] = digipot_curve5 ;
+				newdigipot->digipot_0_position[5] = digipot_0_position5 ; 
 				break ;
 			case 6:
 				newdigipot->digipot_label[6] = digipot_label6 ;
 				newdigipot->digipot_curve[6] = digipot_curve6 ;
+				newdigipot->digipot_0_position[6] = digipot_0_position6 ;
 				break ;
 			case 7:
 				newdigipot->digipot_label[7] = digipot_label7 ;
-				newdigipot->digipot_curve[7] = digipot_curve7 ;  
+				newdigipot->digipot_curve[7] = digipot_curve7 ; 
+				newdigipot->digipot_0_position[7] = digipot_0_position7 ; 
 				break ;
 			default:
 				printf("more than 8 channel !") ;
