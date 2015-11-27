@@ -98,7 +98,7 @@ unsigned char last_instant_status = 0 ;// previous button status for comparison 
 unsigned long int impulse_time = 0 ;   // exact bounce time
 unsigned long int last_impulse_time = 0 ; // just the preview time value, to know time before two status change
 unsigned char writeOk = 1 ;            // a flag which authorize the current values to be recorded in the objects structure
-char *touched ;                        // LABEL. Is some command touched moved by user ? it's LABEL is stored there
+char *touched ;                        // LABEL. Is some command touched moved by user ? it's LABEL is here
 
 struct encoder *lastEncoder ;
 struct encoder *currentEncoder ;
@@ -152,7 +152,7 @@ void updateOneEncoder(unsigned char interrupt)
 	
 	struct encoder *encoder = encoders ;
 	
-//	touched = "1" ;
+	touched = "1" ;
 	
 	step = 0 ;	
 	now = micros() ; // mark elapsed time for chrono 1 - elaped time between two detends (or steps if 1/4 grey code sequence rotary encoder model) for "speed rotation"
@@ -173,6 +173,7 @@ void updateOneEncoder(unsigned char interrupt)
 			{	// found the correct encoder which is interrupting
 			
 				encoder->active_flag = 1 ;
+
 				touched = encoder->label ;
 			
 //				printf("#0 - IRQ:%d - encoder->last_Pin:%d - encoder->last_IRQ_a:%d - encoder->last_IRQ_b:%d \n", interrupt, encoder->last_Pin, micros() - encoder->last_IRQ_a, micros() - encoder->last_IRQ_b) ;
@@ -326,7 +327,6 @@ void updateOneEncoder(unsigned char interrupt)
 	lastupdate_3 = now_3 = micros() ; // reset/restart bounce timer
 	lastupdate_4 = now_4 = micros() ; // reset/start second debounce timer
 	encoder->active_flag = 0 ;
-	touched = encoder->label ;
 }
 //======================================================================
 int check_rotation_direction(unsigned char previous_step, unsigned char current_step, unsigned char sequence)
@@ -448,7 +448,7 @@ void updateOneButton(unsigned char interrupt)
 	int pin ;	
 	struct button *button = buttons ;
 	
-//	touched = "1" ;
+	touched = "1" ;
 	
 //	unsigned long int starting_time = 0 ;  // start this debounce timer now
 	
@@ -517,7 +517,6 @@ void updateOneButton(unsigned char interrupt)
 						button->timestamp = micros() ;			
 					}
 				}			
-				touched = button->label ;
 				button->active_flag = 0 ;  // unlock it, job is terminated
 				break ; // terminated with the correct encoder, exit from the loop
 			}
