@@ -294,10 +294,13 @@ void updateOneEncoder(unsigned char interrupt)
 								float dB = 20 * log10(ratio) + (speed * - step) ;
 								//printf(" *** RIGHT *** Limit:%d - value:%d - ratio:%f - dB:%f",encoder->high_Limit,encoder->value,ratio,dB) ;
 								value = (pow(10,(dB / 20)) * encoder->high_Limit) ;
-								closest_value = value + 0.5 ; // closest digital value
-								if (closest_value > encoder->high_Limit) {encoder->value = encoder->high_Limit ;}
-								else if (closest_value < encoder->low_Limit) {encoder->value = encoder->low_Limit ;}
-								else {encoder->value = closest_value ;}
+								closest_value = value + 0.51 ; // closest digital value
+								
+								if (closest_value == encoder->value) {encoder->value = encoder->value + (speed * - step);}
+								else if (closest_value >= encoder->high_Limit) {encoder->value = encoder->high_Limit;}
+								else if (closest_value <= encoder->low_Limit) {encoder->value = encoder->low_Limit;}
+								else {encoder->value = closest_value;}	
+								
 								//printf("\n ============ dB: %f - value:%f - closest_value: %d ============= \n", dB, value, closest_value) ;
 							}
 							else
@@ -328,7 +331,7 @@ void updateOneEncoder(unsigned char interrupt)
 						if ( ( (encoder->value + (speed * step)) <= encoder->high_Limit ) 
 							&& ( (encoder->value + (speed * step)) >= encoder->low_Limit ) )
 						{
-							printf("\n encoder->curve:%s \n",encoder->curve) ;
+							//printf("\n encoder->curve:%s \n",encoder->curve) ;
 							if      (encoder->curve == "LIN") 
 							{
 								encoder->value = encoder->value + (speed * step) ;
@@ -341,16 +344,16 @@ void updateOneEncoder(unsigned char interrupt)
 								
 								ratio = (float) encoder->value / encoder->high_Limit ; 
 								float dB = 20 * log10(ratio) + (speed * step) ;
-								printf(" *** RIGHT *** Limit:%d - value:%d - ratio:%f - dB:%f",encoder->high_Limit,encoder->value,ratio,dB) ;
+								//printf(" *** RIGHT *** Limit:%d - value:%d - ratio:%f - dB:%f",encoder->high_Limit,encoder->value,ratio,dB) ;
 								value = (pow(10,(dB / 20)) * encoder->high_Limit) ;
 								closest_value = value + 0.51 ; // closest digital value
 								
-								if (closest_value == encoder->value) {encoder->value = encoder->value + (speed * step);printf(" VAL");}
-								else if (closest_value >= encoder->high_Limit) {encoder->value = encoder->high_Limit;printf(" > MAX");}
-								else if (closest_value <= encoder->low_Limit) {encoder->value = encoder->low_Limit;printf(" < MIN");}
-								else {encoder->value = closest_value;printf(" - OK");}	
+								if (closest_value == encoder->value) {encoder->value = encoder->value + (speed * step);}
+								else if (closest_value >= encoder->high_Limit) {encoder->value = encoder->high_Limit;}
+								else if (closest_value <= encoder->low_Limit) {encoder->value = encoder->low_Limit;}
+								else {encoder->value = closest_value;}	
 								
-								printf("\n ============ dB: %f - value:%f - closest_value: %d ============= \n", dB, value, closest_value) ;
+								//printf("\n ============ dB: %f - value:%f - closest_value: %d ============= \n", dB, value, closest_value) ;
 							}
 							else
 							{
