@@ -106,7 +106,7 @@ int updateOneDigipot(char *digipot_label, int wiper_value)
 				int x = -1 ;
 				x = wiringPiI2CRead(digipot->digipot_setUpIO) ;	
 				
-				// convert tap position to attenuation in dB
+				// convert digipot tap position to attenuation in dB
 				double tap = -(x - digipot->wiper_positions) ;
 				double ratio ;
 				if (digipot->digipot_0_position[loop] == "RIGHT")
