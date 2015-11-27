@@ -1,7 +1,7 @@
 /* rotaryencoder.h :
  * Header for "rotaryencoder.c" LGPLv3 library for Raspberry Pi.
  * Needs its rotaryencoder.c file companion and "wiringPi" LPGLv3 lib.
- * V1.1.0
+ * V1.1.1
  */
 
 /*=======================================================================\
@@ -60,9 +60,9 @@
  * "test.c" code exemple.
  */
 
-#define max_encoders 8
+#define max_encoders 10 // 21/2
 
-#define max_buttons 17
+#define max_buttons 21
 
 #include "binary-values.h"
 
@@ -73,11 +73,14 @@ struct encoder
 	int pin_a ;                     // which GPIO received the A pin from the rotary encoder
 	int pin_b ;                     // which GPIO received the B pin from the rotary encoder
 	unsigned char sequence ;        // rotary encoder sends a complete 4 steps sequence (full cycle) or 1/4 cycle only per detent
+	char *curve ;                   // LIN ,LOG, ANTILOG, whatever described in the library
 	unsigned char reverse ;         // encoder much count or rotate in reverse 
 	unsigned char looping ;         // looping from one end to other when value limits are reached, from high_Limit to low_Limit and reverse
 	long int low_Limit ;            // max lowerst value, could be negative
 	long int high_Limit ;           // max higherst value, could be negative
 	volatile long int value ;       // used to drive your solution, can be the starting default value or something in memory somewhere
+//	double rotaryEncoder_dB ;       // choosen level in dB, used to convert linear digipots into LOG version 
+	char *zero_dB_position ;        // default ZERO dB gain position, at RIGHT, CENTER, or LEFT
 	volatile long int lastEncoded ; // memo to compare 2 consecutive steps binary values, don't modify
 	unsigned long int pause ;       // pause time between gaps to reset rotary encoder speed level, in microsecondes
 	int speed_Level_Threshold_2 ;   // second speed shift level threshold value
@@ -95,8 +98,8 @@ struct encoder
 struct encoder encoders[max_encoders] ;
 
 struct encoder *setupencoder(char *label, char *drived_Entity, 
-	int pin_a, int pin_b, unsigned char sequence, unsigned char reverse, 
-	unsigned char looping, long int low_Limit, long int high_Limit, 
+	int pin_a, int pin_b, unsigned char sequence, char *curve, char *zero_dB_position, 
+	unsigned char reverse, unsigned char looping, long int low_Limit, long int high_Limit, 
 	long int value, unsigned long int pause, 
 	int speed_Level_Threshold_2, int speed_Level_Threshold_3, int speed_Level_Threshold_4,
 	int speed_Level_Multiplier_2, int speed_Level_Multiplier_3, int speed_Level_Multiplier_4) ; 
