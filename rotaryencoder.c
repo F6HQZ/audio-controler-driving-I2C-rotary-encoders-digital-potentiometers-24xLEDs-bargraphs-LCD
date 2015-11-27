@@ -1,7 +1,7 @@
 /* rotaryencoder.c :
  * Just another library for rotary encoders on Raspberry Pi.
  * Needs its rotaryencoder.h file companion and "wiringPi" LPGLv3 lib.
- * V.1.1.0
+ * V.1.1.1
  */
  
 /*=======================================================================\
@@ -98,11 +98,18 @@ unsigned char last_instant_status = 0 ;// previous button status for comparison 
 unsigned long int impulse_time = 0 ;   // exact bounce time
 unsigned long int last_impulse_time = 0 ; // just the preview time value, to know time before two status change
 unsigned char writeOk = 1 ;            // a flag which authorize the current values to be recorded in the objects structure
-char *touched ;                        // LABEL. Is some command touched moved by user ? it's LABEL is here
+char *touched ;                        // LABEL. Is some command touched moved by user ? it's LABEL is stored there
 
 struct encoder *lastEncoder ;
 struct encoder *currentEncoder ;
-
+struct encoder *setupencoder(char *label, char *drived_Entity, 
+	int pin_a, int pin_b, unsigned char sequence, char *curve, char *zero_dB_position, 
+	unsigned char reverse, unsigned char looping, long int low_Limit, long int high_Limit, 
+	long int value, unsigned long int pause, 
+	int speed_Level_Threshold_2, int speed_Level_Threshold_3, int speed_Level_Threshold_4,
+	int speed_Level_Multiplier_2, int speed_Level_Multiplier_3, int speed_Level_Multiplier_4) ;
+struct button *setupbutton(char *label, int pin, long int value) ;
+	
 void updateOneEncoder(unsigned char interrupt) ;
 int check_rotation_direction(unsigned char previous_step, unsigned char current_step, unsigned char sequence) ;
 void updateOneButton(unsigned char interrupt) ;
@@ -116,6 +123,11 @@ void Interrupt4 (void) { updateOneEncoder(4) ; }
 void Interrupt5 (void) { updateOneEncoder(5) ; }
 void Interrupt6 (void) { updateOneEncoder(6) ; }
 void Interrupt7 (void) { updateOneEncoder(7) ; }
+void Interrupt10 (void) { updateOneButton(10) ; }
+void Interrupt11 (void) { updateOneButton(11) ; }
+void Interrupt12 (void) { updateOneButton(12) ; }
+void Interrupt13 (void) { updateOneButton(13) ; }
+void Interrupt14 (void) { updateOneButton(14) ; }
 void Inter0 (void) { updateOneButton(0) ; }
 void Inter1 (void) { updateOneButton(1) ; }
 void Inter2 (void) { updateOneButton(2) ; }
@@ -124,6 +136,12 @@ void Inter4 (void) { updateOneButton(4) ; }
 void Inter5 (void) { updateOneButton(5) ; }
 void Inter6 (void) { updateOneButton(6) ; }
 void Inter7 (void) { updateOneButton(7) ; }
+void Inter10 (void) { updateOneButton(10) ; }
+void Inter11 (void) { updateOneButton(11) ; }
+void Inter12 (void) { updateOneButton(12) ; }
+void Inter13 (void) { updateOneButton(13) ; }
+void Inter14 (void) { updateOneButton(14) ; }
+
 // these following GPIO exist on Rapsi 2 and B+ only !
 void Interrupt21 (void) { updateOneEncoder(21) ; }
 void Interrupt22 (void) { updateOneEncoder(22) ; }
@@ -152,7 +170,7 @@ void updateOneEncoder(unsigned char interrupt)
 	
 	struct encoder *encoder = encoders ;
 	
-	touched = "1" ;
+//	touched = "1" ;
 	
 	step = 0 ;	
 	now = micros() ; // mark elapsed time for chrono 1 - elaped time between two detends (or steps if 1/4 grey code sequence rotary encoder model) for "speed rotation"
@@ -173,7 +191,6 @@ void updateOneEncoder(unsigned char interrupt)
 			{	// found the correct encoder which is interrupting
 			
 				encoder->active_flag = 1 ;
-
 				touched = encoder->label ;
 			
 //				printf("#0 - IRQ:%d - encoder->last_Pin:%d - encoder->last_IRQ_a:%d - encoder->last_IRQ_b:%d \n", interrupt, encoder->last_Pin, micros() - encoder->last_IRQ_a, micros() - encoder->last_IRQ_b) ;
@@ -262,7 +279,31 @@ void updateOneEncoder(unsigned char interrupt)
 						if ( ( (encoder->value + (speed * - step)) <= encoder->high_Limit ) 
 							&& ( (encoder->value + (speed * - step)) >= encoder->low_Limit) )
 						{
-							encoder->value = encoder->value + (speed * - step) ;
+							printf("\n encoder->curve:%s \n",encoder->curve) ;
+							if (encoder->curve == "LIN")
+							{
+								encoder->value = encoder->value + (speed * - step) ;
+							}
+							else if (encoder->curve == "LOG")
+							{
+								float ratio ;
+								int closest_value ;
+								float value  ;
+								
+								ratio = (float) encoder->value / encoder->high_Limit ; 
+								float dB = 20 * log10(ratio) + (speed * - step) ;
+								//printf(" *** RIGHT *** Limit:%d - value:%d - ratio:%f - dB:%f",encoder->high_Limit,encoder->value,ratio,dB) ;
+								value = (pow(10,(dB / 20)) * encoder->high_Limit) ;
+								closest_value = value + 0.5 ; // closest digital value
+								if (closest_value > encoder->high_Limit) {encoder->value = encoder->high_Limit ;}
+								else if (closest_value < encoder->low_Limit) {encoder->value = encoder->low_Limit ;}
+								else {encoder->value = closest_value ;}
+								//printf("\n ============ dB: %f - value:%f - closest_value: %d ============= \n", dB, value, closest_value) ;
+							}
+							else
+							{
+								printf("\n!!! ZERO value not recognized!!!\n") ;
+							}
 						} 
 						else
 						{
@@ -287,7 +328,34 @@ void updateOneEncoder(unsigned char interrupt)
 						if ( ( (encoder->value + (speed * step)) <= encoder->high_Limit ) 
 							&& ( (encoder->value + (speed * step)) >= encoder->low_Limit ) )
 						{
-							encoder->value = encoder->value + (speed * step) ;
+							printf("\n encoder->curve:%s \n",encoder->curve) ;
+							if      (encoder->curve == "LIN") 
+							{
+								encoder->value = encoder->value + (speed * step) ;
+							}
+							else if (encoder->curve == "LOG") 
+							{	
+								float ratio ;
+								int closest_value ;
+								float value  ;
+								
+								ratio = (float) encoder->value / encoder->high_Limit ; 
+								float dB = 20 * log10(ratio) + (speed * step) ;
+								printf(" *** RIGHT *** Limit:%d - value:%d - ratio:%f - dB:%f",encoder->high_Limit,encoder->value,ratio,dB) ;
+								value = (pow(10,(dB / 20)) * encoder->high_Limit) ;
+								closest_value = value + 0.51 ; // closest digital value
+								
+								if (closest_value == encoder->value) {encoder->value = encoder->value + (speed * step);printf(" VAL");}
+								else if (closest_value >= encoder->high_Limit) {encoder->value = encoder->high_Limit;printf(" > MAX");}
+								else if (closest_value <= encoder->low_Limit) {encoder->value = encoder->low_Limit;printf(" < MIN");}
+								else {encoder->value = closest_value;printf(" - OK");}	
+								
+								printf("\n ============ dB: %f - value:%f - closest_value: %d ============= \n", dB, value, closest_value) ;
+							}
+							else
+							{
+								printf("\n!!! curve not recognized!!!\n") ;
+							}
 						}
 						else
 						{
@@ -307,6 +375,7 @@ void updateOneEncoder(unsigned char interrupt)
 							}
 						}
 					}
+					
 					// when step is realy modified/validated (-1 or 1) :
 					step_was_modified = 1 ;
 					pre_step = step ; // -1 or 1, depending rotation direction
@@ -327,6 +396,7 @@ void updateOneEncoder(unsigned char interrupt)
 	lastupdate_3 = now_3 = micros() ; // reset/restart bounce timer
 	lastupdate_4 = now_4 = micros() ; // reset/start second debounce timer
 	encoder->active_flag = 0 ;
+	touched = encoder->label ;
 }
 //======================================================================
 int check_rotation_direction(unsigned char previous_step, unsigned char current_step, unsigned char sequence)
@@ -448,7 +518,7 @@ void updateOneButton(unsigned char interrupt)
 	int pin ;	
 	struct button *button = buttons ;
 	
-	touched = "1" ;
+//	touched = "1" ;
 	
 //	unsigned long int starting_time = 0 ;  // start this debounce timer now
 	
@@ -517,6 +587,7 @@ void updateOneButton(unsigned char interrupt)
 						button->timestamp = micros() ;			
 					}
 				}			
+				touched = button->label ;
 				button->active_flag = 0 ;  // unlock it, job is terminated
 				break ; // terminated with the correct encoder, exit from the loop
 			}
@@ -533,8 +604,8 @@ void updateOneButton(unsigned char interrupt)
 }
 //======================================================================
 struct encoder *setupencoder(char *label, char *drived_Entity, 
-	int pin_a, int pin_b, unsigned char sequence, unsigned char reverse, 
-	unsigned char looping, long int low_Limit, long int high_Limit, 
+	int pin_a, int pin_b, unsigned char sequence, char *curve, char *zero_dB_position, 
+	unsigned char reverse, unsigned char looping, long int low_Limit, long int high_Limit, 
 	long int value, unsigned long int pause, 
 	int speed_Level_Threshold_2, int speed_Level_Threshold_3, int speed_Level_Threshold_4,
 	int speed_Level_Multiplier_2, int speed_Level_Multiplier_3, int speed_Level_Multiplier_4)
@@ -553,15 +624,36 @@ struct encoder *setupencoder(char *label, char *drived_Entity,
 	
 	struct encoder *newencoder = encoders + numberofencoders++ ;
 	newencoder->label = label ;                                       // name or label as "Volume" or "Balance" or "Treble", etc...
-	newencoder->drived_Entity = drived_Entity ;                                       // what is drived by this rotary encoder : digipot_label, etc... to be linked to
+	newencoder->drived_Entity = drived_Entity ;                       // what is drived by this rotary encoder : digipot_label, etc... to be linked to
 	newencoder->pin_a = pin_a ;                                       // which GPIO received the A pin from the rotary encoder
 	newencoder->pin_b = pin_b ;                                       // which GPIO received the B pin from the rotary encoder
 	newencoder->sequence = sequence ;                                 // rotary encoder sends a complete 4 steps sequence (full cycle) or 1/4 cycle only per detent
+	newencoder->curve = curve ;                                       // linear ,log, antilog, whatever described in the library
 	newencoder->reverse = reverse ;                                   // encoder much count or rotate in reverse
 	newencoder->looping = looping ;                                   // looping from one end to other when value limits are reached, from high_Limit to low_Limit and reverse
 	newencoder->low_Limit = low_Limit ;                               // max lowerst value, could be negative
 	newencoder->high_Limit = high_Limit ;                             // max higherst value, could be negative
 	newencoder->value = value ;                                       // used to drive your solution, can be the starting default value or something in memory somewhere
+/*
+	// convert "value" to attenuation in dB
+	double tap = -(value - high_Limit) ;
+	double ratio ;
+	if (zero_dB_position == "RIGHT")
+	{
+		ratio = ((++high_Limit - tap) / (++high_Limit -1)) ;
+	}
+	else if (zero_dB_position == "CENTER")
+	{
+		ratio = ((++high_Limit - tap) / ((++high_Limit/2) -1)) ;
+	}
+	else
+	{
+		printf("\n!!! Rotary-Encoder ZERO position value not recognized !!!\n") ;
+	}
+	double dB = (20 * log10(ratio)) ;
+	newencoder->rotaryEncoder_dB = dB ; // init "dB" value regarding digital "value"
+*/	
+	newencoder->zero_dB_position = zero_dB_position ;	
 	newencoder->lastEncoded = 3 ;                                     // memo to compare 2 consecutive steps binary values, don't modify
 	newencoder->pause = pause ;                                       // pause time between gaps to reset rotary encoder speed level, in microsecondes
 	newencoder->speed_Level_Threshold_2 = speed_Level_Threshold_2 ;   // second speed shift level threshold value
@@ -615,6 +707,21 @@ struct encoder *setupencoder(char *label, char *drived_Entity,
 			case 7:
 				wiringPiISR (7, INT_EDGE_BOTH, &Interrupt7) ;
 				break ;
+			case 10:
+				wiringPiISR (10, INT_EDGE_BOTH, &Interrupt10) ;
+				break ;
+			case 11:
+				wiringPiISR (11, INT_EDGE_BOTH, &Interrupt11) ;
+				break ;
+			case 12:
+				wiringPiISR (12, INT_EDGE_BOTH, &Interrupt12) ;
+				break ;
+			case 13:
+				wiringPiISR (13, INT_EDGE_BOTH, &Interrupt13) ;
+				break ;
+			case 14:
+				wiringPiISR (14, INT_EDGE_BOTH, &Interrupt14) ;
+				break ;
 			case 21:
 				wiringPiISR (21, INT_EDGE_BOTH, &Interrupt21) ;
 				break ;
@@ -665,7 +772,7 @@ struct button *setupbutton(char *label, int pin, long int value)
 	newbutton->previous_timestamp = micros() ; // record the previous time when status was changed (ON or OFF) to detect push duration
 	newbutton->active_flag = 0 ;               // not yet working on its status
 	
-	//Button settings
+	//Button settings for wiringPi
 	pinMode(pin,INPUT) ;
 	pullUpDnControl(pin, PUD_UP) ;  // pullup internal resistor
 	
@@ -695,6 +802,21 @@ struct button *setupbutton(char *label, int pin, long int value)
 			break ;
 		case 7:
 			wiringPiISR (7, INT_EDGE_BOTH, &Inter7) ;
+			break ;
+		case 10:
+			wiringPiISR (10, INT_EDGE_BOTH, &Inter10) ;
+			break ;
+		case 11:
+			wiringPiISR (11, INT_EDGE_BOTH, &Inter11) ;
+			break ;
+		case 12:
+			wiringPiISR (12, INT_EDGE_BOTH, &Inter12) ;
+			break ;
+		case 13:
+			wiringPiISR (13, INT_EDGE_BOTH, &Inter13) ;
+			break ;
+		case 14:
+			wiringPiISR (14, INT_EDGE_BOTH, &Inter14) ;
 			break ;
 		case 21:
 			wiringPiISR (21, INT_EDGE_BOTH, &Inter21) ;
