@@ -139,15 +139,15 @@ int main (void)
  	printf("rotary encoders declaration start \n") ;
 	// rotary encoders declaration :
 	struct encoder *encoder = 
-	// rotary encoder name, linked digipot name, pins for A and B, sequence, reverse, looping, low limit, high limit, value at starting, timers...
-	setupencoder ("GAIN",  "DIGIPOT-GAIN",   0, 1,YES,NO,NO,0,255, 50,500000,30000,15000,6000,10,25,50) ;  // pins 0 and 1
-	setupencoder ("VOLUME","DIGIPOT-VOLUME", 2, 3,YES,NO,NO,0,255, 25,500000,30000,15000,6000,10,25,50) ;  // pins 2 and 3
-	setupencoder ("GRAVE", "DIGIPOT-GRAVE",  4, 5,YES,NO,NO,0,255,127,500000,30000,15000,6000,10,25,50) ;  // pins 4 and 5
-	setupencoder ("MEDIUM","DIGIPOT-MEDIUM", 6, 7,YES,NO,NO,0,255,127,500000,30000,15000,6000,10,25,50) ;  // pins 6 and 7
-	setupencoder ("AIGUE", "DIGIPOT-AIGUE", 10,11,YES,NO,NO,0,255,127,500000,30000,15000,6000,10,25,50) ;  // pins 10 and 11
-	setupencoder ("BOUCLE","DIGIPOT-BOUCLE",12,13,YES,NO,NO,0,255,  0,500000,30000,15000,6000,10,25,50) ;  // pins 12 and 13
-	setupencoder ("SORTIE","DIGIPOT-SORTIE",14,21,YES,NO,NO,0,255,  0,500000,30000,15000,6000,10,25,50) ;  // pins 14 and 21
-	setupencoder ("CASQUE","DIGIPOT-CASQUE",22,23,YES,NO,NO,0,255,  0,500000,30000,15000,6000,10,25,50) ;  // pins 22 and 23
+	// rotary encoder name, linked digipot name, pins for A and B, sequence, curve, ZERO position, reverse, looping, low limit, high limit, value at starting, timers...
+	setupencoder ("GAIN",  "DIGIPOT-GAIN",   0, 1,YES,"LIN","RIGHT", NO,NO,0,255, 50,500000,30000,15000,6000,10,25,50) ;  // pins 0 and 1
+	setupencoder ("VOLUME","DIGIPOT-VOLUME", 2, 3,YES,"LIN","RIGHT", NO,NO,0,255, 25,500000,30000,15000,6000,10,25,50) ;  // pins 2 and 3
+	setupencoder ("GRAVE", "DIGIPOT-GRAVE",  4, 5,YES,"LOG","RIGHT", NO,NO,0,255,255,500000,30000,15000,6000,10,25,50) ;  // pins 4 and 5
+	setupencoder ("MEDIUM","DIGIPOT-MEDIUM", 6, 7,YES,"LOG","RIGHT", NO,NO,0,255,127,500000,30000,15000,6000,10,25,50) ;  // pins 6 and 7
+	setupencoder ("AIGUE", "DIGIPOT-AIGUE", 10,11,YES,"LOG","RIGHT", NO,NO,0,255,127,500000,30000,15000,6000,10,25,50) ;  // pins 10 and 11
+	setupencoder ("BOUCLE","DIGIPOT-BOUCLE",12,13,YES,"LOG","RIGHT", NO,NO,0,255,  0,500000,30000,15000,6000,10,25,50) ;  // pins 12 and 13
+	setupencoder ("SORTIE","DIGIPOT-SORTIE",14,21,YES,"LOG","RIGHT", NO,NO,0,255,  0,500000,30000,15000,6000,10,25,50) ;  // pins 14 and 21
+	setupencoder ("CASQUE","DIGIPOT-CASQUE",22,23,YES,"LOG","RIGHT", NO,NO,0,255,  0,500000,30000,15000,6000,10,25,50) ;  // pins 22 and 23
 	printf("rotary encoders declaration end \n") ;
 	
 	printf("buttons declaration start \n") ;
@@ -179,8 +179,8 @@ int main (void)
 	printf("digipots declaration start \n") ;
 	// digipots declaration :
 	struct digipot *digipot = 
-	setupdigipot("0",0x2c,4,"AD5263",200000,256,"DIGIPOT-GAIN","LIN","RIGHT","DIGIPOT-VOLUME","LOG","RIGHT","DIGIPOT-GRAVE","LIN","CENTER","DIGIPOT-MEDIUM","LIN","CENTER","","","","","","","","","","","","") ; // 0=I2C (1=SPI), addr, channels, ref, Ohms, positions, name#1, name#2, name#3, name#4, ...
-	setupdigipot("0",0x2d,4,"AD5263",200000,256,"DIGIPOT-AIGUE","LIN","CENTER","DIGIPOT-BOUCLE","LOG","RIGHT","DIGIPOT-SORTIE","LOG","RIGHT","DIGIPOT-CASQUE","LOG","RIGHT","","","","","","","","","","","","") ; // 0=I2C (1=SPI), addr, channels, ref, Ohms, positions, name#1, name#2, name#3, name#4, ...
+	setupdigipot("0",0x2c,4,"AD5263",200000,256,"DIGIPOT-GAIN","LIN","RIGHT","DIGIPOT-VOLUME","LOG","RIGHT","DIGIPOT-GRAVE","LIN","RIGHT","DIGIPOT-MEDIUM","LIN","RIGHT","","","","","","","","","","","","") ; // 0=I2C (1=SPI), addr, channels, ref, Ohms, positions, name#1, name#2, name#3, name#4, ...
+	setupdigipot("0",0x2d,4,"AD5263",200000,256,"DIGIPOT-AIGUE","LIN","RIGHT","DIGIPOT-BOUCLE","LOG","RIGHT","DIGIPOT-SORTIE","LOG","RIGHT","DIGIPOT-CASQUE","LOG","RIGHT","","","","","","","","","","","","") ; // 0=I2C (1=SPI), addr, channels, ref, Ohms, positions, name#1, name#2, name#3, name#4, ...
 //	setupdigipot("0",0x70,1,"HP16K33",20000,0xffff,"BARGRAPH","","","","","","","","","","","") ; // 0=I2C (1=SPI), addr, channels, ref, Ohms, positions, name#1, name#2, name#3, name#4, ...
 	printf("digipots declaration end \n") ;
 	
