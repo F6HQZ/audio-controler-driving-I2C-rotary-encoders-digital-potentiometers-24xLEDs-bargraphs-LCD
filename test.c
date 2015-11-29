@@ -179,9 +179,8 @@ int main (void)
 	printf("digipots declaration start \n") ;
 	// digipots declaration :
 	struct digipot *digipot = 
-	setupdigipot("0",0x2c,4,"AD5263",200000,256,"DIGIPOT-GAIN","LIN","RIGHT","DIGIPOT-VOLUME","LOG","RIGHT","DIGIPOT-GRAVE","LIN","RIGHT","DIGIPOT-MEDIUM","LIN","RIGHT","","","","","","","","","","","","") ; // 0=I2C (1=SPI), addr, channels, ref, Ohms, positions, name#1, name#2, name#3, name#4, ...
-	setupdigipot("0",0x2d,4,"AD5263",200000,256,"DIGIPOT-AIGUE","LIN","RIGHT","DIGIPOT-BOUCLE","LOG","RIGHT","DIGIPOT-SORTIE","LOG","RIGHT","DIGIPOT-CASQUE","LOG","RIGHT","","","","","","","","","","","","") ; // 0=I2C (1=SPI), addr, channels, ref, Ohms, positions, name#1, name#2, name#3, name#4, ...
-//	setupdigipot("0",0x70,1,"HP16K33",20000,0xffff,"BARGRAPH","","","","","","","","","","","") ; // 0=I2C (1=SPI), addr, channels, ref, Ohms, positions, name#1, name#2, name#3, name#4, ...
+	setupdigipot("0",0x2c,4,"AD5263",200000,256,"DIGIPOT-GAIN","LIN","RIGHT","DIGIPOT-VOLUME","LOG","RIGHT","DIGIPOT-GRAVE","LIN","RIGHT","DIGIPOT-MEDIUM","LIN","RIGHT","","","","","","","","","","","","") ; // 0=I2C (1=SPI), addr, channels, ref, Ohms, positions, name#1, LOG/LIN, RIGHT/CENTER, name#2, ...
+	setupdigipot("0",0x2d,4,"AD5263",200000,256,"DIGIPOT-AIGUE","LIN","RIGHT","DIGIPOT-BOUCLE","LOG","RIGHT","DIGIPOT-SORTIE","LOG","RIGHT","DIGIPOT-CASQUE","LOG","RIGHT","","","","","","","","","","","","") ; 
 	printf("digipots declaration end \n") ;
 	
 	printf("bargraphs declaration start \n") ;
@@ -193,8 +192,8 @@ int main (void)
 	printf("A/D D/A converters and Digit I/O extensions modules declaration start \n") ;
 	// converters modules declaration :
 	struct extension_module *extension_module =
-	setupModule("ANALOG-CONVERTER#1","GAIN","VOLUME","SORTIE","CASQUE","","","","","PCF8591","0",0x48,200,4) ; // name, name of chan#0, chan#1, chan#2, chan#3, chan#4, chan#5, chan#6, chan#7, chip type, bus type, bus address, I/O pins base (>64 and different of the others)
-	setupModule("DIGITAL-OUTPUT#1","RELAY#1","RELAY#2","RELAY#3","RELAY#4","RELAY#5","RELAY#6","RELAY#7","RELAY#8","PCF8574","0",0x3e,210,8) ; // name, name of chan#0, chan#1, chan#2, chan#3, chan#4, chan#5, chan#6, chan#7, chip type, bus type, bus address, I/O pins base (>64 and different of the others)
+	setupModule("ANALOG-CONVERTER#1","GAIN","VOLUME","SORTIE","CASQUE","","","","","PCF8591","0",0x48,200,4) ; // chip name, name of chan#0, chan#1, chan#2, chan#3, chan#4, chan#5, chan#6, chan#7, chip type, bus type, bus address, I/O pins base (>64 and different of the others)
+	setupModule("DIGITAL-OUTPUT#1","RELAY#1","RELAY#2","RELAY#3","RELAY#4","RELAY#5","RELAY#6","RELAY#7","RELAY#8","PCF8574","0",0x3e,210,8) ;
 	printf("A/D D/A converters and Digit I/O extensions modules declaration end \n") ;
 	
 	extern numberofencoders ;
@@ -288,7 +287,6 @@ int main (void)
 			{	
 				touched = encoder->label ;
 				print = 1 ;
-				
 				memo_rotary[step] = encoder->value ;
 				updateOneDigipot(encoder->drived_Entity, encoder->value) ;
 //				printf("%s - step:%d - memo:%d - encoder->value:%d \n", encoder->label, step, memo_rotary[step], encoder->value) ;
@@ -313,10 +311,8 @@ int main (void)
 					{	// found the attached rotary encoder
 						touched = encoder->label ;
 						print = 1 ;
-					
-						bargraphWrite("BARGRAPH", encoder->low_Limit, encoder->high_Limit, 0, encoder->value) ;
-				
-//						printf("\n +++ reading DIGIPOT: \"%s\" \n", encoder->drived_Entity) ;
+						//printf("\n*** Encoder: %s Curve: %s \n", encoder->label, encoder->curve) ;
+						//printf("\n +++ reading DIGIPOT: \"%s\" \n", encoder->drived_Entity) ;
 						double x = digipotRead(encoder->drived_Entity) ; // read the attached digipot
 						found = 1 ;
 						break ;
@@ -347,6 +343,7 @@ int main (void)
 						voltmeterInput = extension_module->module_pinBase + loop ;
 						break ;
 					} 
+					voltmeterInput =  -1 ; // nothing found
 				}
 				if (voltmeterInput > 0) { break ; }
 			}
@@ -358,7 +355,24 @@ int main (void)
 			{
 				if (encoder->label == touched)
 				{	// temporary display encoder value on Bargraph when turning or pushing it
-					bargraphWrite("BARGRAPH", encoder->low_Limit, encoder->high_Limit, 0, encoder->value) ; // display encoder position value to Bargraph
+		
+					//bargraphWrite("BARGRAPH", encoder->low_Limit, encoder->high_Limit, 0, encoder->value) ; // display encoder position value to Bargraph
+					//printf("\n*** Encoder: %s Curve: %s \n", encoder->label, encoder->curve) ;
+					if (encoder->curve == "LIN")
+					{
+						//printf("\n*** LIN ***\n") ;
+						bargraphWrite("BARGRAPH", encoder->low_Limit, encoder->high_Limit, 0, encoder->value) ;
+					}
+					else if (encoder->curve == "LOG")
+					{
+						//printf("\n*** LOG ***\n") ;
+						bargraphWrite("BARGRAPH", encoder->low_Limit, encoder->high_Limit, 4, encoder->value) ;
+					}
+					else
+					{
+						printf("\n!!! curve not recognized for this reotary encoder !!!\n") ;
+					}
+					
 					// display digipot position value and attenuation in dB to LCD Display
 					struct digipot *digipot = digipots ;	
 					for (; digipot < digipots + numberofdigipots ; digipot++)
@@ -398,20 +412,27 @@ int main (void)
 			long int sampleDuration = 0 ;
 			long int sampleStartingTime = micros() ;
 			int loop = 0 ;
-			for(; sampleDuration < 5000 ; loop++) // few audio samples for peak detection during a short period (abt 5ms as requested for integration)
+			if ((voltmeterInput != -1) && (voltmeterInput != 0))
 			{
-				value = analogRead(voltmeterInput) ;
-				if (value > peakValue) 
-				{ 
-					peakValue = value ; // peak memo after few analog samples
-				}		
-				sampleDuration = micros() - sampleStartingTime ;
-//				printf("loop:%d - value:%d - peakValue:%d - ", loop, value, peakValue) ;
+				for(; sampleDuration < 5000 ; loop++) // few audio samples for peak detection during a short period (abt 5ms as requested for integration)
+				{
+					value = analogRead(voltmeterInput) ;
+					if (value > peakValue) 
+					{ 
+						peakValue = value ; // peak memo after few analog samples
+					}		
+					sampleDuration = micros() - sampleStartingTime ;
+	//				printf("loop:%d - value:%d - peakValue:%d - ", loop, value, peakValue) ;
+				}
+			}
+			else 
+			{
+				peakValue = 0 ;
 			}
 			bargraphWrite("BARGRAPH", 0, 255, 2, (long int) peakValue) ; // datas : bargraph name, min, max, VU-Meter type: 1 normal linear with one long green bar zone + 1 small amber bar + 1 small red bar, 2 same but logarythmic, 3 Digital log Peak meter ie green bar and only one RED (for max value)
 			voltmeterTimer = micros() ; // reset gap timer
 //			printf("\n ~~~ value:%d - sampleDuration:%d", value, sampleDuration) ;
-		}	
+		}
 		
 		//--------------------------------------------------------------
 
