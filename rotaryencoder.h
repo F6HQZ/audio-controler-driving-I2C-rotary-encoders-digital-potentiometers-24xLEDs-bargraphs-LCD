@@ -14,7 +14,7 @@
 | http://wiringpi.com/                                                   |
 |                                                                        |
 | My library permits an easy use of few rotary encoders with push switch |
-| in ther axe and use them as "objects" stored in structures. Like this, |
+| in ther axis and use them as "objects" stored in structures. Like this,|
 | they are easy to read or modify values and specs from anywhere in your |
 | own software which must use them.                                      |
 |                                                                        |
