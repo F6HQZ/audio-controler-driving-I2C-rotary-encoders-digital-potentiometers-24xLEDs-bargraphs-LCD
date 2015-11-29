@@ -79,10 +79,10 @@ int bargraphWrite(char *bargraph_label, float low_Limit, float high_Limit, int b
 
 int bargraphWrite(char *bargraph_label, float low_Limit, float high_Limit, int bargraph_mode, long int value)
 { 	
-//	printf("\n !!! bargraph: %s - value: %d \n", bargraph_label, value) ;
+	//printf("\n !!! bargraph: %s - value: %d \n", bargraph_label, value) ;
 	int x = 0 ;
 	float coef = high_Limit - low_Limit ;
-//	printf("> 0/ lo:%f - hi:%f - coef:%f - value:%d \n",low_Limit,high_Limit,coef,value) ;
+	//printf("> 0/ lo:%f - hi:%f - coef:%f - value:%d \n",low_Limit,high_Limit,coef,value) ;
 	
 	struct bargraph *bargraph = bargraphs ;	
 	for (; bargraph < bargraphs + numberofbargraphs ; bargraph++)
@@ -91,21 +91,22 @@ int bargraphWrite(char *bargraph_label, float low_Limit, float high_Limit, int b
 		{	// found one
 			switch (bargraph_mode)
 			{	// different displaying mode cases, different effects
-				case 0 : // green LEDs background bar for the full scale, but a unique red LED turning several times for each of the smallest steps, for rotary encoder rotation guide
+			
+				//======================================================
+				
+				case 0 : // green LEDs background bar for the full scale, but a unique red LED turning several times 
+				         // for each of the smallest steps, for rotary encoder rotation indication guide
 				{
+					printf("\n*** bargraph case 0 ***\n") ;
 					if (bargraph->bargraph_ref == "adafruit1721")
 					{ 	
-//						printf("> 1/ lo:%f - hi:%f - coef:%f - value:%d \n", low_Limit, high_Limit, coef, value) ;
-						
+						//printf("> 1/ lo:%f - hi:%f - coef:%f - value:%d \n", low_Limit, high_Limit, coef, value) ;
 						if ((high_Limit - low_Limit) <= 600) // number of max steps for this bargraph
 							{ coef = 599 / coef ; value = value * coef ; }
 						else
 							{ coef = coef / 599 ; value = value / coef ; }
-//						printf("> 2/ lo:%f - hi:%f - coef:%f - value:%f \n", low_Limit, high_Limit, coef, value) ;
-//						int value = (int)value ;
-//						printf("> 3/ lo:%f - hi:%f - coef:%f - value:%f \n", low_Limit, high_Limit, coef, value) ;
-						
-//						printf(" >>> found setUpIO:%d \n",bargraph->bargraph_setUpIO) ;
+						//printf("> 2/ lo:%f - hi:%f - coef:%f - value:%f \n", low_Limit, high_Limit, coef, value) ;
+						//printf(" >>> found setUpIO:%d \n",bargraph->bargraph_setUpIO) ;
 						int slaveAddressByte = bargraph->bargraph_address << 1 | 0b0 ; // prepare the first byte including the internal sub digipot address, only for displaying and tests, because it's sent automaticaly by wiringpi itself, don't care !	
 						int instructionByte ;
 						
@@ -206,12 +207,12 @@ int bargraphWrite(char *bargraph_label, float low_Limit, float high_Limit, int b
 							backgroundLEDs = 0b11111111 ; instructionByte = 0x03 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, backgroundLEDs) ; delay(I2C_DELAY) ;
 							backgroundLEDs = 0b11111111 ; instructionByte = 0x05 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, backgroundLEDs) ; delay(I2C_DELAY) ; }
 																
-		//				printf("instructionByte: 0x%x - backgroundLEDs:%d 0x%x \n",instructionByte,backgroundLEDs,backgroundLEDs) ;
+						//printf("instructionByte: 0x%x - backgroundLEDs:%d 0x%x \n",instructionByte,backgroundLEDs,backgroundLEDs) ;
 															
 						// select the correct matrix red LEDs row, only one LED lighting, running along the bargraph for more precision :
 						x = value / 4 ; // 4 consecutive same color leds blocs
-		//				printf("### value:%d - x:%d - x/3:%d - even/odd:%d - x%3:%d - x%6:%d - x%9:%d \n", value, x, x/3, (x/3)%2, x%3, x%6, x%9) ;				
-		//				printf("§§§ value:%d - page# x/3:%d - (x/3)/2:%d - ((x/3)/2)-1:%d - (8*((x/3)/2)):%d - (16*(((x/3)/2)-1)):%d \n",value,x/3,(x/3)/2,((x/3)/2)-1,(8*((x/3)/2)),(16*(((x/3)/2)-1)) ) ;
+						//printf("### value:%d - x:%d - x/3:%d - even/odd:%d - x%3:%d - x%6:%d - x%9:%d \n", value, x, x/3, (x/3)%2, x%3, x%6, x%9) ;				
+						//printf("§§§ value:%d - page# x/3:%d - (x/3)/2:%d - ((x/3)/2)-1:%d - (8*((x/3)/2)):%d - (16*(((x/3)/2)-1)):%d \n",value,x/3,(x/3)/2,((x/3)/2)-1,(8*((x/3)/2)),(16*(((x/3)/2)-1)) ) ;
 		
 						if((x/3)%2==0) 
 						{ // even - (pair) - first 3 x 8 bits blocs (LSB)
@@ -238,14 +239,18 @@ int bargraphWrite(char *bargraph_label, float low_Limit, float high_Limit, int b
 							}
 						}
 						
-		//				printf(" === odd/even:%d - value: %d - setUpIO:%d - instructionByte: 0x%x - value: (%d) 0x%x ===\n\n", (x/3)%2, value, bargraph->bargraph_setUpIO, instructionByte, value, value) ;
+						//printf(" === odd/even:%d - value: %d - setUpIO:%d - instructionByte: 0x%x - value: (%d) 0x%x ===\n\n", (x/3)%2, value, bargraph->bargraph_setUpIO, instructionByte, value, value) ;
 						
 						x = wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, value) ;
 					}
 					break ;
 				}
+				
+				//======================================================
+				
 				case 1 : // like a standard analog audio VU-Meter but linear like a Voltmeter (not log), green bar + amber small bar + a few red leds at right, with a needle integration balistic emulation (temporized decay)
 				{
+					//printf("\n*** bargraph case 1 ***\n") ;
 					if (bargraph->bargraph_ref == "adafruit1721")
 					{ 	// found one
 						int bargraph_length = 0 ; // how many LEDs ON, 0 to 24
@@ -360,8 +365,12 @@ int bargraphWrite(char *bargraph_label, float low_Limit, float high_Limit, int b
 					}
 					break ;
 				}
+				
+				//======================================================
+				
 				case 2 : // like a standard analog logarythmic audio VU-Meter, green bar + amber small bar + a small red bar at right before clipping indication by turning orange into red at full scale, with a small decay timing
 				{
+					//printf("\n*** bargraph case 2 ***\n") ;
 					if (bargraph->bargraph_ref == "adafruit1721")
 					{ 	// found one
 //						value = 255 ;  // temporary value for test
@@ -502,8 +511,12 @@ int bargraphWrite(char *bargraph_label, float low_Limit, float high_Limit, int b
 					}
 					break ;
 				}
+				
+				//======================================================
+				
 				case 3 : // like a peak program digital VU-Meter (PPM), green bar + only one red led at right for max value just before clipping indication to never raise, with a small decay timing
 				{
+					//printf("\n*** bargraph case 3 ***\n") ;
 					if (bargraph->bargraph_ref == "adafruit1721")
 					{ 	// found one
 						int values = 256 ;
@@ -637,6 +650,148 @@ int bargraphWrite(char *bargraph_label, float low_Limit, float high_Limit, int b
 					}
 					break ;
 				}
+				
+				//======================================================
+				
+				case 4 : // green LEDs background bar for the full scale, no red led at all,
+				         // for "LOG" rotary encoder rotation indication guide
+				{
+					printf("\n*** bargraph case 4 ***\n") ;
+					if (bargraph->bargraph_ref == "adafruit1721")
+					{ 	// found one
+						int values = 256 ;
+						int zerodB = 255 ;
+						int ledsQty = bargraph->bargraph_steps ; // 24 apparent steps
+						int ledStep_dB = 2 ; // each LED bar one more step = 2 dB x 24 LEDs = 48 dB of dynamic = 8 bits !
+						int bargraph_length = 0 ; // how many GREEN LEDs ON, 0 to 24
+						int bargraph_value = 0 ; // value which will be realy sent to bargraph to display through I2C
+						int suplBits = 0 ; // used to add few LSB to bargraph_Value
+						int instructionByte ; 
+						int bargraphRedBlackout ;
+						int attackTime = 0 ; // msec from min to max
+						int releaseTime = 0 ; // msec from max to min
+						
+						// log variation	
+						float ratio = (float) value / zerodB ;  // Input value / Full Scale
+						float dB = 20 * log10(ratio) ;
+						bargraph_length = 25 + (dB / ledStep_dB) ;
+						
+						// few manual cosmetic corrections for first steps
+						switch(value)
+						{
+							case 1 : bargraph_length = 1 ; break ; // the smallerst value to display on first LED  
+							case 2 : bargraph_length = 2 ; break ; 
+							case 3 : bargraph_length = 3 ; break ; 
+							case 4 : bargraph_length = 4 ; break ; 
+							case 5 : bargraph_length = 5 ; break ; 
+							case 6 : bargraph_length = 6 ; break ; 
+							case 7 : bargraph_length = 7 ; break ; 
+							case 8 : bargraph_length = 8 ; break ; 
+							case 9 : bargraph_length = 9 ; break ; 
+							default: break ;
+						}
+						
+//						if ((bargraph_length != bargraph->bargraph_value) || (VuMeterWakeUp == 1))
+//						{	// write to bargraph if different value only
+/*
+							if (bargraph_length > bargraph->bargraph_value)
+							{
+								if (bargraph->bargraph_value < 24)
+								{
+									delay(attackTime / bargraph->bargraph_steps) ;
+									++bargraph->bargraph_value ; // slowly increases the enlighted bargraph length for galvanometer balistic emulation
+								}
+								bargraph_length = bargraph->bargraph_value ;						}
+							else 
+							{
+								if ((bargraph->bargraph_value > 0) && (bargraph_length < bargraph->bargraph_value)) 
+								{ 
+									delay(releaseTime / bargraph->bargraph_steps) ;
+									--bargraph->bargraph_value ; // slowly decreases the enlighted bargraph length for galvanometer balistic emulation
+								}  
+								bargraph_length = bargraph->bargraph_value ;
+							}
+*/							
+							// display enlight LEDs depending bargraph_length from 0 to 24, then enlight a last RED LED if value = 255
+							if (bargraph_length == 0)
+							{
+								suplBits = 0 ;
+							}
+							else if (bargraph_length == 1 | bargraph_length == 5 | bargraph_length ==  9 | bargraph_length == 13 | bargraph_length == 17 | bargraph_length == 21)
+							{
+								suplBits = 0b1 ;
+							}
+							else if (bargraph_length == 2 | bargraph_length == 6 | bargraph_length == 10 | bargraph_length == 14 | bargraph_length == 18 | bargraph_length == 22)
+							{
+								suplBits = 0b11 ;
+							}
+							else if (bargraph_length == 3 | bargraph_length == 7 | bargraph_length == 11 | bargraph_length == 15 | bargraph_length == 19 | bargraph_length == 23)
+							{
+								suplBits = 0b111 ;
+							}
+							else if (bargraph_length == 4 | bargraph_length == 8 | bargraph_length == 12 | bargraph_length == 16 | bargraph_length == 20 | bargraph_length == 24)
+							{
+								suplBits = 0b1111 ;
+							}
+							
+	//						printf("\n === value:%d - ratio:%f - dBu:%f - bargraph_length:%d - suplBits:%d ===", value, ratio, dB, bargraph_length, suplBits) ;
+	
+							// no RED LEDs (all of them OFF)
+							bargraphRedBlackout = 0b00000000 ; instructionByte = 0x00 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, bargraphRedBlackout) ; delay(I2C_DELAY) ;
+							bargraphRedBlackout = 0b00000000 ; instructionByte = 0x02 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, bargraphRedBlackout) ; delay(I2C_DELAY) ;
+							bargraphRedBlackout = 0b00000000 ; instructionByte = 0x04 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, bargraphRedBlackout) ; delay(I2C_DELAY) ;
+	
+							//GREEN LEDs now, depending the signal value
+							if (bargraph_length < 5)
+							{
+								bargraph_value = (0b00000000 << bargraph_length) | suplBits ; instructionByte = 0x01 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, bargraph_value) ; delay(I2C_DELAY) ;
+								bargraph_value = 0b00000000 ; instructionByte = 0x03 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, bargraph_value) ; delay(I2C_DELAY) ;
+								bargraph_value = 0b00000000 ; instructionByte = 0x05 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, bargraph_value) ; delay(I2C_DELAY) ;
+							}			
+							else if (bargraph_length > 4 && bargraph_length < 9)
+							{
+								bargraph_value = 0b00001111 ; instructionByte = 0x01 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, bargraph_value) ; delay(I2C_DELAY) ;
+								bargraph_value = (0b00000000 << bargraph_length) | suplBits ; instructionByte = 0x03 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, bargraph_value) ; delay(I2C_DELAY) ;
+								bargraph_value = 0b00000000 ; instructionByte = 0x05 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, bargraph_value) ; delay(I2C_DELAY) ;
+							}	
+							else if (bargraph_length > 8 && bargraph_length < 13)
+							{
+								bargraph_value = 0b00001111 ; instructionByte = 0x01 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, bargraph_value) ; delay(I2C_DELAY) ;
+								bargraph_value = 0b00001111 ; instructionByte = 0x03 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, bargraph_value) ; delay(I2C_DELAY) ;
+								bargraph_value = (0b00000000 << bargraph_length) | suplBits ; instructionByte = 0x05 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, bargraph_value) ; delay(I2C_DELAY) ;
+							}	
+							else if (bargraph_length > 12 && bargraph_length < 17)
+							{							
+								bargraph_value = ((0b00001111 << (bargraph_length -12)) | suplBits) ; instructionByte = 0x01 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, bargraph_value) ; delay(I2C_DELAY) ;
+								bargraph_value = 0b00001111 ; instructionByte = 0x03 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, bargraph_value) ; delay(I2C_DELAY) ;
+								bargraph_value = 0b00001111 ; instructionByte = 0x05 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, bargraph_value) ; delay(I2C_DELAY) ;
+							}	
+							else if (bargraph_length > 16 && bargraph_length < 21)
+							{	
+								bargraph_value = 0b11111111 ; instructionByte = 0x01 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, bargraph_value) ; delay(I2C_DELAY) ;
+								bargraph_value = (0b00001111 << (bargraph_length -16) | suplBits) ; instructionByte = 0x03 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, bargraph_value) ; delay(I2C_DELAY) ;
+								bargraph_value = 0b00001111 ; instructionByte = 0x05 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, bargraph_value) ; delay(I2C_DELAY) ;
+							}	
+							else if (bargraph_length > 20 && bargraph_length < 25)
+							{
+								bargraph_value = 0b11111111 ; instructionByte = 0x01 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, bargraph_value) ; delay(I2C_DELAY) ;
+								bargraph_value = 0b11111111 ; instructionByte = 0x03 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, bargraph_value) ; delay(I2C_DELAY) ;
+								bargraph_value = ((0b00001111 << (bargraph_length -20)) | suplBits) ; instructionByte = 0x05 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, bargraph_value) ; delay(I2C_DELAY) ;
+							}	
+/*							if (value == 255)
+							{ 	
+	//							bargraph_value = 0b11111111 ; instructionByte = 0x01 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, bargraph_value) ; delay(I2C_DELAY) ;
+	//							bargraph_value = 0b11111111 ; instructionByte = 0x03 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, bargraph_value) ; delay(I2C_DELAY) ;
+								bargraph_value = 0b01111111 ; instructionByte = 0x05 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, bargraph_value) ; delay(I2C_DELAY) ;
+								bargraph_value = 0b10000000 ; instructionByte = 0x04 ; wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, bargraph_value) ; delay(I2C_DELAY) ; // the last RED LED point if 255
+							}
+*/
+							VuMeterWakeUp = 0 ;
+//						}	
+					}
+					break ;
+				}
+						
 				printf("\n not an expected case for bargraph management ! \n") ;
 				break ;
 			}
