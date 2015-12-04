@@ -140,14 +140,14 @@ int main (void)
 	// rotary encoders declaration :
 	struct encoder *encoder = 
 	// rotary encoder name, linked digipot name, pins for A and B, sequence, curve, ZERO position, reverse, looping, low limit, high limit, value at starting, timers...
-	setupencoder ("GAIN",  "DIGIPOT-GAIN",   0, 1,YES,"LIN","RIGHT", NO,NO,0,255, 50,500000,30000,15000,6000,10,25,50) ;  // pins 0 and 1
-	setupencoder ("VOLUME","DIGIPOT-VOLUME", 2, 3,YES,"LIN","RIGHT", NO,NO,0,255, 25,500000,30000,15000,6000,10,25,50) ;  // pins 2 and 3
-	setupencoder ("GRAVE", "DIGIPOT-GRAVE",  4, 5,YES,"LOG","RIGHT", NO,NO,0,255,255,500000,30000,15000,6000,10,25,50) ;  // pins 4 and 5
-	setupencoder ("MEDIUM","DIGIPOT-MEDIUM", 6, 7,YES,"LOG","RIGHT", NO,NO,0,255,127,500000,30000,15000,6000,10,25,50) ;  // pins 6 and 7
-	setupencoder ("AIGUE", "DIGIPOT-AIGUE", 10,11,YES,"LOG","RIGHT", NO,NO,0,255,127,500000,30000,15000,6000,10,25,50) ;  // pins 10 and 11
-	setupencoder ("BOUCLE","DIGIPOT-BOUCLE",12,13,YES,"LOG","RIGHT", NO,NO,0,255,  0,500000,30000,15000,6000,10,25,50) ;  // pins 12 and 13
-	setupencoder ("SORTIE","DIGIPOT-SORTIE",14,21,YES,"LOG","RIGHT", NO,NO,0,255,  0,500000,30000,15000,6000,10,25,50) ;  // pins 14 and 21
-	setupencoder ("CASQUE","DIGIPOT-CASQUE",22,23,YES,"LOG","RIGHT", NO,NO,0,255,  0,500000,30000,15000,6000,10,25,50) ;  // pins 22 and 23
+	setupencoder ("GAIN",  "DIGIPOT-GAIN",   0, 1,YES,"LIN","RIGHT",  NO,NO,   0,255, 50,500000,30000,15000,6000,10,25,50) ;  // pins 0 and 1
+	setupencoder ("VOLUME","DIGIPOT-VOLUME", 2, 3,YES,"LIN","RIGHT",  NO,NO,   0,255, 25,500000,30000,15000,6000,10,25,50) ;  // pins 2 and 3
+	setupencoder ("GRAVE", "DIGIPOT-GRAVE",  4, 5,YES,"LIN","CENTER", NO,NO,-127,128,  0,500000,30000,15000,6000,10,25,50) ;  // pins 4 and 5
+	setupencoder ("MEDIUM","DIGIPOT-MEDIUM", 6, 7,YES,"LOG","CENTER", NO,NO,-127,128,  0,500000,30000,15000,6000,10,25,50) ;  // pins 6 and 7
+	setupencoder ("AIGUE", "DIGIPOT-AIGUE", 10,11,YES,"LOG","CENTER", NO,NO,-127,128,  0,500000,30000,15000,6000,10,25,50) ;  // pins 10 and 11
+	setupencoder ("BOUCLE","DIGIPOT-BOUCLE",12,13,YES,"LOG","RIGHT",  NO,NO,   0,255,  0,500000,30000,15000,6000,10,25,50) ;  // pins 12 and 13
+	setupencoder ("SORTIE","DIGIPOT-SORTIE",14,21,YES,"LOG","RIGHT",  NO,NO,   0,255,  0,500000,30000,15000,6000,10,25,50) ;  // pins 14 and 21
+	setupencoder ("CASQUE","DIGIPOT-CASQUE",22,23,YES,"LOG","RIGHT",  NO,NO,   0,255,  0,500000,30000,15000,6000,10,25,50) ;  // pins 22 and 23
 	printf("rotary encoders declaration end \n") ;
 	
 	printf("buttons declaration start \n") ;
@@ -179,8 +179,8 @@ int main (void)
 	printf("digipots declaration start \n") ;
 	// digipots declaration :
 	struct digipot *digipot = 
-	setupdigipot("0",0x2c,4,"AD5263",200000,256,"DIGIPOT-GAIN","LIN","RIGHT","DIGIPOT-VOLUME","LOG","RIGHT","DIGIPOT-GRAVE","LIN","RIGHT","DIGIPOT-MEDIUM","LIN","RIGHT","","","","","","","","","","","","") ; // 0=I2C (1=SPI), addr, channels, ref, Ohms, positions, name#1, LOG/LIN, RIGHT/CENTER, name#2, ...
-	setupdigipot("0",0x2d,4,"AD5263",200000,256,"DIGIPOT-AIGUE","LIN","RIGHT","DIGIPOT-BOUCLE","LOG","RIGHT","DIGIPOT-SORTIE","LOG","RIGHT","DIGIPOT-CASQUE","LOG","RIGHT","","","","","","","","","","","","") ; 
+	setupdigipot("0",0x2c,4,"AD5263",200000,256,"DIGIPOT-GAIN","LIN","RIGHT","DIGIPOT-VOLUME","LOG","RIGHT","DIGIPOT-GRAVE","LOG","CENTER","DIGIPOT-MEDIUM","LOG","CENTER","","","","","","","","","","","","") ; // 0=I2C (1=SPI), addr, channels, ref, Ohms, positions, name#1, LOG/LIN, RIGHT/CENTER, name#2, ...
+	setupdigipot("0",0x2d,4,"AD5263",200000,256,"DIGIPOT-AIGUE","LOG","CENTER","DIGIPOT-BOUCLE","LOG","RIGHT","DIGIPOT-SORTIE","LOG","RIGHT","DIGIPOT-CASQUE","LOG","RIGHT","","","","","","","","","","","","") ; 
 	printf("digipots declaration end \n") ;
 	
 	printf("bargraphs declaration start \n") ;
@@ -313,7 +313,7 @@ int main (void)
 						print = 1 ;
 						//printf("\n*** Encoder: %s Curve: %s \n", encoder->label, encoder->curve) ;
 						//printf("\n +++ reading DIGIPOT: \"%s\" \n", encoder->drived_Entity) ;
-						double x = digipotRead(encoder->drived_Entity) ; // read the attached digipot
+//						double x = digipotRead(encoder->drived_Entity) ; // read the attached digipot
 						found = 1 ;
 						break ;
 					}
@@ -348,7 +348,8 @@ int main (void)
 				if (voltmeterInput > 0) { break ; }
 			}
 //			printf("\n >>> touched:%s - voltmeterInput:%d", touched, voltmeterInput) ;
-			// display the values on bargraph and LCD
+
+			// display the value on bargraph and LCD
 			displayShow("", "") ; // restart immediatly the LCD display backlight without to delete the already displayed info
 			struct encoder *encoder = encoders ;
 			for (; encoder < encoders + numberofencoders ; encoder++)
@@ -360,13 +361,27 @@ int main (void)
 					//printf("\n*** Encoder: %s Curve: %s \n", encoder->label, encoder->curve) ;
 					if (encoder->curve == "LIN")
 					{
-						//printf("\n*** LIN ***\n") ;
-						bargraphWrite("BARGRAPH", encoder->low_Limit, encoder->high_Limit, 0, encoder->value) ;
+						if (encoder->zero_dB_position == "RIGHT")
+						{
+							//printf("\n*** LIN ***\n") ;
+							bargraphWrite("BARGRAPH", encoder->low_Limit, encoder->high_Limit, 0, encoder->value) ;
+						}
+						else if (encoder->zero_dB_position == "CENTER")
+						{
+							bargraphWrite("BARGRAPH", encoder->low_Limit, encoder->high_Limit, 5, encoder->value) ;
+						}
 					}
 					else if (encoder->curve == "LOG")
 					{
 						//printf("\n*** LOG ***\n") ;
-						bargraphWrite("BARGRAPH", encoder->low_Limit, encoder->high_Limit, 4, encoder->value) ;
+						if (encoder->zero_dB_position == "RIGHT")
+						{
+							bargraphWrite("BARGRAPH", encoder->low_Limit, encoder->high_Limit, 4, encoder->value) ;
+						}
+						else if (encoder->zero_dB_position == "CENTER")
+						{
+							bargraphWrite("BARGRAPH", encoder->low_Limit, encoder->high_Limit, 5, encoder->value) ;
+						}
 					}
 					else
 					{
@@ -468,41 +483,28 @@ int main (void)
 			{
 				int loop = 0 ;
 				int found = 0 ;
+				float ratio ;
+				float dB ;
+				
 				for (; loop < digipot->digipot_channels ; loop++)
 				{
 					int slaveAddressByte = digipot->digipot_address << 1 | 0b0 ; // prepare the first byte including the internal sub digipot address, only for displaying and tests, because it's sent automaticaly by wiringpi itself, don't care !
 					int instructionByte = loop << 5 ; // this is the "int reg", the second I2C byte sent by wiringpi
 					wiringPiI2CWriteReg8(digipot->digipot_setUpIO, instructionByte, digipot->digipot_value[loop]) ; // send the complete I2C frame to the chip, rewrite the current wipper value, because the READ instruction get the last writed digipot
-					
-//					x = -1 ;
-					x = wiringPiI2CRead(digipot->digipot_setUpIO) ;	
+					x = wiringPiI2CRead(digipot->digipot_setUpIO) ;	// read the last digipot's channel previously writed
 					if (x > -1)
 					{ 
-						// convert tap position to attenuation in dB
-						double tap = -(x - digipot->wiper_positions) ;
-						double ratio ;
-						if (digipot->digipot_0_position[loop] == "RIGHT")
-						{
-							ratio = ((digipot->wiper_positions - tap) / (digipot->wiper_positions -1)) ;
-						}
-						else if (digipot->digipot_0_position[loop] == "CENTER")
-						{
-							ratio = ((digipot->wiper_positions - tap) / ((digipot->wiper_positions/2) -1)) ;
-						}
-						else
-						{
-							printf("\n!!! ZERO position value not recognized !!!\n") ;
-							printf("ELSE-digipot->digipot_0_position[loop]:%s",digipot->digipot_0_position[loop]) ;
-						}
-						double dB = (20 * log10(ratio)) ;
-						digipot->digipot_att[loop] = dB ; // store the digipot attenuation in dB
-		
-						printf(">>> Digipot Read addr: Ox%x=%d - setUpIO: 0x%x=%d - slaveAddrByte: 0x%x=%d - instrucByte: 0x%2x=%3d - dataByte: 0x%2x=%3d - value:%5d - tap:%3.0f - att:%3.2f(dB) \n", 
-								digipot->digipot_address, digipot->digipot_address, digipot->digipot_setUpIO, digipot->digipot_setUpIO, slaveAddressByte, slaveAddressByte, instructionByte, instructionByte, x, x, digipot->digipot_value[loop], tap, dB) ; 
+						//float tap = -(x - digipot->wiper_positions) ;
+						int tap = -(x - digipot->wiper_positions) ;
+				
+						printf(">>> Digipot Read addr: Ox%x=%d - setUpIO: 0x%x=%d - slaveAddrByte: 0x%x=%d - instrucByte: 0x%2x=%3d - dataByte: 0x%2x=%3d - value:%5d - tap:%3.0d - att:%3.2f(dB) \n", 
+								digipot->digipot_address, digipot->digipot_address, digipot->digipot_setUpIO, digipot->digipot_setUpIO, slaveAddressByte, slaveAddressByte, instructionByte, instructionByte, x, x, digipot->digipot_value[loop], tap, digipot->digipot_att[loop]) ; 
+
+						//printf("\n =+= Loop:%d - Label:%s - Positions:%d - Tap:%d - Ratio:%f - dB:%f - DigipotValue:%d \n",loop,digipot->digipot_label[loop],digipot->wiper_positions,tap,ratio,dB,digipot->digipot_value[loop]) ;
 					}
 					else
 					{ 
-						printf("Digipot Read error\n") ; 
+						printf("\n !!! Digipot Read !!! error\n") ; 
 					}
 				}
 			}
