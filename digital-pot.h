@@ -54,18 +54,18 @@
 
 struct digipot
 {
-	char *digipot_label[MAX_POT_CHIP] ;      // name or label as "Volume" or "Balance" or "Treble", etc...
-	char *digipot_bus_type ;                 // 0 for I2C or 1 for SPI
-	int digipot_address ;                    // address of the chip on the I2C or SPI bus
-	char *digipot_reference ;                // digipot provider reference
-	int digipot_ohms ;                       // RAB potentiometer resistor value
-	char *digipot_curve[MAX_POT_CHIP] ;      // linear ,log, antilog, whatever described in the library
-	char *digipot_0_position[MAX_POT_CHIP] ; // default ZERO dB gain position, right, centered, left
-	int wiper_positions ;                    // 128 256 512 1024 positions from 0 to max value (A to B pot connectors)
-	char digipot_channels ;                  // number of independant digipots in the same chipset : single, dual, quad, octo...
-	int wiper_memo[MAX_POT_CHIP] ;           // record the last position before to shutdown to restore at restarting for each channel
+	char *digipot_label[MAX_POT_CHIP] ;             // name or label as "Volume" or "Balance" or "Treble", etc...
+	char *digipot_bus_type ;                        // 0 for I2C or 1 for SPI
+	int digipot_address ;                           // address of the chip on the I2C or SPI bus
+	char *digipot_reference ;                       // digipot provider reference
+	int digipot_ohms ;                              // RAB potentiometer resistor value
+	char *digipot_curve[MAX_POT_CHIP] ;             // linear ,log, antilog, whatever described in the library
+	char *digipot_0_position[MAX_POT_CHIP] ;        // default ZERO dB gain position, right, centered, left
+	int wiper_positions ;                           // 128 256 512 1024 positions from 0 to max value (A to B pot connectors)
+	char digipot_channels ;                         // number of independant digipots in the same chipset : single, dual, quad, octo...
+	int wiper_memo[MAX_POT_CHIP] ;                  // record the last position before to shutdown to restore at restarting for each channel
 	volatile long int digipot_value[MAX_POT_CHIP] ; // current digipot register value for each channel
-	double digipot_att[MAX_POT_CHIP] ;       // in dB, current attenuation, calculated from the current digipot_value
+	double digipot_att[MAX_POT_CHIP] ;              // in dB, current attenuation, calculated from the current digipot_value
 	int digipot_setUpIO ;
 };
 
