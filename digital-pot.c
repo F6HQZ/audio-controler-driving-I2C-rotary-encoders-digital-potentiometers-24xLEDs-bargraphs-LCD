@@ -83,51 +83,59 @@ int updateOneDigipot(char *digipot_label, int wiper_value)
 	for (; digipot < digipots + numberofdigipots ; digipot++)
 	{
 		int loop = 0 ;
+		int slaveAddressByte ;
+		int instructionByte ;
+		float ratio ;
+		float dB ;
+				
 		for (; loop < digipot->digipot_channels ; loop++)
 		{
 			if (digipot_label == digipot->digipot_label[loop])
 			{
+				int tap = -(wiper_value - digipot->wiper_positions) ;
+				
 				if (digipot->digipot_reference == "AD5263") // chip from Analog Device
 				{
-					int slaveAddressByte = digipot->digipot_address << 1 | 0b0 ; // prepare the first byte including the internal sub digipot address, only for displaying and tests, because it's sent automaticaly by wiringpi itself, don't care !	
-					int instructionByte = loop << 5 ; // this is the "int reg", the second I2C byte sent by wiringpi
-				
-					wiringPiI2CWriteReg8(digipot->digipot_setUpIO, instructionByte, wiper_value) ; // send the complete I2C frame to the chip
-									
-/*					printf(">>> Digipot addr: Ox%x = %d - setUpIO: 0x%x = %d - slaveAddressByte: 0x%x = %d - instructionByte: 0x%x = %d - dataByte: 0x%x = %d \n", 
-						digipot->digipot_address, digipot->digipot_address, 
-						digipot->digipot_setUpIO, digipot->digipot_setUpIO, 
-						slaveAddressByte, slaveAddressByte, instructionByte, 
-						instructionByte, wiper_value, wiper_value) ;
-*/					
-					digipot->digipot_value[loop] = wiper_value ; // store the wiper value in Raspi local memory
+					slaveAddressByte = digipot->digipot_address << 1 | 0b0 ; // prepare the first byte including the internal sub digipot address, only for displaying and tests, because it's sent automaticaly by wiringpi itself, don't care !	
+					instructionByte = loop << 5 ; // this is the "int reg", the second I2C byte sent by wiringpi
+					//wiringPiI2CWriteReg8(digipot->digipot_setUpIO, instructionByte, wiper_value) ; // send the complete I2C frame to the chip
+					//digipot->digipot_value[loop] = wiper_value ; // store the wiper value in memory
 				}	
-			
-				int x = -1 ;
-				x = wiringPiI2CRead(digipot->digipot_setUpIO) ;	
 				
 				// convert digipot tap position to attenuation in dB
-				double tap = -(x - digipot->wiper_positions) ;
-				double ratio ;
 				if (digipot->digipot_0_position[loop] == "RIGHT")
 				{
-					ratio = ((digipot->wiper_positions - tap) / (digipot->wiper_positions -1)) ;
+					ratio = (float) (digipot->wiper_positions - tap) / (digipot->wiper_positions -1) ;
+					digipot->digipot_value[loop] = wiper_value ; // store the wiper value in memory
+					wiringPiI2CWriteReg8(digipot->digipot_setUpIO, instructionByte, wiper_value) ; // send the complete I2C frame to the chip
 				}
 				else if (digipot->digipot_0_position[loop] == "CENTER")
 				{
-					ratio = ((digipot->wiper_positions - tap) / ((digipot->wiper_positions/2) -1)) ;
+					if (wiper_value >= 0)
+					{
+						ratio = (float) digipot->wiper_positions / (digipot->wiper_positions - wiper_value) ;
+						digipot->digipot_value[loop] = wiper_value + (digipot->wiper_positions / 2) -1 ; // store the wiper value in memory
+						wiringPiI2CWriteReg8(digipot->digipot_setUpIO, instructionByte, wiper_value + (digipot->wiper_positions / 2) - 1) ; // send the complete I2C frame to the chip
+					}
+					else
+					{
+						ratio = (float) (wiper_value + digipot->wiper_positions) / (digipot->wiper_positions) ;
+						digipot->digipot_value[loop] = wiper_value + (digipot->wiper_positions / 2) - 1 ; // store the wiper value in memory
+						wiringPiI2CWriteReg8(digipot->digipot_setUpIO, instructionByte, wiper_value + (digipot->wiper_positions / 2) - 1) ; // send the complete I2C frame to the chip
+					}	
 				}
 				else
 				{
 					printf("\n!!! ZERO position value not recognized !!!\n") ;
 					printf("ELSE-digipot->digipot_0_position[loop]:%s",digipot->digipot_0_position[loop]) ;
 				}
-				double dB = (20 * log10(ratio)) ;
+				dB = (20 * log10(ratio)) ;
 				digipot->digipot_att[loop] = dB ; // store the digipot attenuation in dB
+				//printf("\n === Loop:%d - Label:%s - Positions:%d - RotaryEncoderValue:%d - Ratio:%f - dB:%f - DigipotValue:%d \n",loop,digipot->digipot_label[loop],digipot->wiper_positions,wiper_value,ratio,dB,digipot->digipot_value[loop]) ;
 					
-//				printf("\n>>> Digipot Read response : x:%d - tap:%0.0f - att:%2.2f(dB) \n", x, tap, dB) ;
+				//printf("\n>>> Digipot Read response : x:%d - tap:%0.0f - att:%2.2f(dB) \n", x, tap, dB) ;
 				
-				break ;
+				break ; // digipot found, stop searching
 			}
 		}
 	}
