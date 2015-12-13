@@ -18,7 +18,7 @@
 | http://wiringpi.com/                                                   |
 |                                                                        |
 | My libraries permit an easy use of few rotary encoders with push switch|
-| in their axe, I2C LCD displays, I2C LEDs bargraphes and I2C digital    |
+| in their axis, I2C LCD displays, I2C LEDs bargraphes and I2C digital   |
 | potentiometers, I2C extensions modules for GPIO digital oe analog I/O  |
 | and use them as "objects" stored in structures.                        |
 |                                                                        |
