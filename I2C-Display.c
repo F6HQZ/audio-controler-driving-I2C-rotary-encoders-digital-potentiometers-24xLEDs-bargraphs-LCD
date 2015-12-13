@@ -119,9 +119,9 @@ void displayInit (void)
 */
 	// optionnal "Hello" message at application starting :
 	lcdPosition(lcdDisplay1,0,0) ; delay(LCD_DELAY) ;
-	lcdPuts(lcdDisplay1, "Projet I2C-Midi ") ; delay(LCD_DELAY) ;
-	lcdPosition(lcdDisplay1,0,1) ; delay(LCD_DELAY) ;
-	lcdPuts(lcdDisplay1, "F6HQZ F.BERGERET") ; delay(LCD_DELAY) ;
+	lcdPuts(lcdDisplay1, "I2C-Midi Control") ; delay(LCD_DELAY) ; // 16 characters long
+ 	lcdPosition(lcdDisplay1,0,1) ; delay(LCD_DELAY) ;
+	lcdPuts(lcdDisplay1, "F6HQZ F.BERGERET") ; delay(LCD_DELAY) ; // 16 characters long
 	printf("Initialisation du Display OK \n") ;
 }
 
@@ -140,12 +140,12 @@ void displayShow (char *line1, char *line2)
 		lcdClear(lcdDisplay1) ; delay(LCD_DELAY) ;
 		
 		lcdPosition(lcdDisplay1,0,0) ; delay(LCD_DELAY) ;
-//		printf("LCD ligne 1: %s \n", line1) ;	
+		//printf("LCD ligne 1: %s \n", line1) ;	
 		//	lcdPuts(lcdDisplay1, line1) ; delay(LCD_DELAY) ;
 		lcdPrintf(lcdDisplay1, line1) ; delay(LCD_DELAY) ;
 		
 		lcdPosition(lcdDisplay1,0,1) ; delay(LCD_DELAY) ;
-//		printf("LCD ligne 2: %s \n", line2) ;
+		//printf("LCD ligne 2: %s \n", line2) ;
 		//	lcdPuts(lcdDisplay1, (const char *)line2) ; delay(LCD_DELAY) ;
 		lcdPrintf(lcdDisplay1, line2) ; delay(LCD_DELAY) ;
 	}
