@@ -3,7 +3,7 @@
  * "digital-pot" libraries.
  * No more interest, except curiosity or learning.
  * You must use your own to integrate that workshop into your audio project.
- * V.1.2.0
+ * V.1.2.1
  */
 
 /*=======================================================================\
@@ -16,7 +16,7 @@
 | http://wiringpi.com/                                                   |
 |                                                                        |
 | My library permits an easy use of few rotary encoders with push switch |
-| in ther axe and use them as "objects" stored in structures. Like this, |
+| in ther axis and use them as "objects" stored in structures. Like this,|
 | they are easy to read or modify values and specs from anywhere in your |
 | own software which must use them.                                      |
 |                                                                        |
@@ -141,8 +141,8 @@ int main (void)
 	struct encoder *encoder = 
 	// rotary encoder name, linked digipot name, pins for A and B, sequence, curve, ZERO position, reverse, looping, low limit, high limit, value at starting, timers...
 	setupencoder ("GAIN",  "DIGIPOT-GAIN",   0, 1,YES,"LIN","RIGHT",  NO,NO,   0,255, 50,500000,30000,15000,6000,10,25,50) ;  // pins 0 and 1
-	setupencoder ("VOLUME","DIGIPOT-VOLUME", 2, 3,YES,"LIN","RIGHT",  NO,NO,   0,255, 25,500000,30000,15000,6000,10,25,50) ;  // pins 2 and 3
-	setupencoder ("GRAVE", "DIGIPOT-GRAVE",  4, 5,YES,"LIN","CENTER", NO,NO,-127,128,  0,500000,30000,15000,6000,10,25,50) ;  // pins 4 and 5
+	setupencoder ("VOLUME","DIGIPOT-VOLUME", 2, 3,YES,"LOG","RIGHT",  NO,NO,   0,255, 25,500000,30000,15000,6000,10,25,50) ;  // pins 2 and 3
+	setupencoder ("GRAVE", "DIGIPOT-GRAVE",  4, 5,YES,"LOG","CENTER", NO,NO,-127,128,  0,500000,30000,15000,6000,10,25,50) ;  // pins 4 and 5
 	setupencoder ("MEDIUM","DIGIPOT-MEDIUM", 6, 7,YES,"LOG","CENTER", NO,NO,-127,128,  0,500000,30000,15000,6000,10,25,50) ;  // pins 6 and 7
 	setupencoder ("AIGUE", "DIGIPOT-AIGUE", 10,11,YES,"LOG","CENTER", NO,NO,-127,128,  0,500000,30000,15000,6000,10,25,50) ;  // pins 10 and 11
 	setupencoder ("BOUCLE","DIGIPOT-BOUCLE",12,13,YES,"LOG","RIGHT",  NO,NO,   0,255,  0,500000,30000,15000,6000,10,25,50) ;  // pins 12 and 13
@@ -265,7 +265,7 @@ int main (void)
 	// main loop is starting here :
 	while (1)
 	{
-//		delay (10) ; // 10 ms default, decreasing the loop speed (and the CPU load from about 25% to minus than 0.3%)
+		//delay (10) ; // 10 ms default, decreasing the loop speed (and the CPU load from about 25% to minus than 0.3%)
 		digitalWrite (LED_DOWN, OFF) ;	// OFF
 		digitalWrite (LED_UP, OFF) ; 	// OFF
 
@@ -289,7 +289,7 @@ int main (void)
 				print = 1 ;
 				memo_rotary[step] = encoder->value ;
 				updateOneDigipot(encoder->drived_Entity, encoder->value) ;
-//				printf("%s - step:%d - memo:%d - encoder->value:%d \n", encoder->label, step, memo_rotary[step], encoder->value) ;
+				//printf("%s - step:%d - memo:%d - encoder->value:%d \n", encoder->label, step, memo_rotary[step], encoder->value) ;
 			}
 			++step ;		
 		} 
@@ -356,19 +356,17 @@ int main (void)
 			{
 				if (encoder->label == touched)
 				{	// temporary display encoder value on Bargraph when turning or pushing it
-		
-					//bargraphWrite("BARGRAPH", encoder->low_Limit, encoder->high_Limit, 0, encoder->value) ; // display encoder position value to Bargraph
 					//printf("\n*** Encoder: %s Curve: %s \n", encoder->label, encoder->curve) ;
 					if (encoder->curve == "LIN")
 					{
 						if (encoder->zero_dB_position == "RIGHT")
 						{
 							//printf("\n*** LIN ***\n") ;
-							bargraphWrite("BARGRAPH", encoder->low_Limit, encoder->high_Limit, 0, encoder->value) ;
+							bargraphWrite("BARGRAPH", encoder->low_Limit, encoder->high_Limit, 0, encoder->value, 0) ;
 						}
 						else if (encoder->zero_dB_position == "CENTER")
 						{
-							bargraphWrite("BARGRAPH", encoder->low_Limit, encoder->high_Limit, 5, encoder->value) ;
+							bargraphWrite("BARGRAPH", encoder->low_Limit, encoder->high_Limit, 5, encoder->value, 0) ;
 						}
 					}
 					else if (encoder->curve == "LOG")
@@ -376,11 +374,11 @@ int main (void)
 						//printf("\n*** LOG ***\n") ;
 						if (encoder->zero_dB_position == "RIGHT")
 						{
-							bargraphWrite("BARGRAPH", encoder->low_Limit, encoder->high_Limit, 4, encoder->value) ;
+							bargraphWrite("BARGRAPH", encoder->low_Limit, encoder->high_Limit, 4, encoder->value, 0) ;
 						}
 						else if (encoder->zero_dB_position == "CENTER")
 						{
-							bargraphWrite("BARGRAPH", encoder->low_Limit, encoder->high_Limit, 5, encoder->value) ;
+							bargraphWrite("BARGRAPH", encoder->low_Limit, encoder->high_Limit, 5, encoder->value, 0) ;
 						}
 					}
 					else
@@ -444,7 +442,7 @@ int main (void)
 			{
 				peakValue = 0 ;
 			}
-			bargraphWrite("BARGRAPH", 0, 255, 2, (long int) peakValue) ; // datas : bargraph name, min, max, VU-Meter type: 1 normal linear with one long green bar zone + 1 small amber bar + 1 small red bar, 2 same but logarythmic, 3 Digital log Peak meter ie green bar and only one RED (for max value)
+			bargraphWrite("BARGRAPH", 0, 255, 2, (long int) peakValue, 0) ; // datas : bargraph name, min, max, VU-Meter type: 1 normal linear with one long green bar zone + 1 small amber bar + 1 small red bar, 2 same but logarythmic, 3 Digital log Peak meter ie green bar and only one RED (for max value)
 			voltmeterTimer = micros() ; // reset gap timer
 //			printf("\n ~~~ value:%d - sampleDuration:%d", value, sampleDuration) ;
 		}
@@ -482,9 +480,9 @@ int main (void)
 			for (; digipot < digipots + numberofdigipots ; digipot++)
 			{
 				int loop = 0 ;
-				int found = 0 ;
-				float ratio ;
-				float dB ;
+				//int found = 0 ;
+				//float ratio ;
+				//float dB ;
 				
 				for (; loop < digipot->digipot_channels ; loop++)
 				{
