@@ -4,7 +4,7 @@
  * To be used with digital-pot.c digital-pot.h I2C-Display.c rotaryencoder.c 
  * and rotaryencoder.h libraries.
  * 
- * V.1.0.0
+ * V.1.0.1
  */
 
 /*=======================================================================\
@@ -17,7 +17,7 @@
 | http://wiringpi.com/                                                   |
 |                                                                        |
 | My libraries permit an easy use of few rotary encoders with push switch|
-| in their axe, I2C LCD displays, I2C LEDs bargraphes and I2C digital    |
+| in their axis, I2C LCD displays, I2C LEDs bargraphes and I2C digital   |
 | potentiometers, and use them as "objects" stored in structures.        |
 | Like this, they are all easy to read or modify values and specs from   |
 | anywhere in your own software which must use them.                     |
