@@ -4,7 +4,7 @@
  * To be used with digital-pot.c digital-pot.h I2C-Display.c rotaryencoder.c 
  * and rotaryencoder.h libraries.
  * 
- * V.1.0.1
+ * V.1.0.2
  */
 
 /*=======================================================================\
@@ -17,7 +17,7 @@
 | http://wiringpi.com/                                                   |
 |                                                                        |
 | My libraries permit an easy use of few rotary encoders with push switch|
-| in their axe, I2C LCD displays, I2C LEDs bargraphes and I2C digital    |
+| in their axis, I2C LCD displays, I2C LEDs bargraphes and I2C digital   |
 | potentiometers, and use them as "objects" stored in structures.        |
 | Like this, they are all easy to read or modify values and specs from   |
 | anywhere in your own software which must use them.                     |
@@ -73,11 +73,11 @@ extern char VuMeterWakeUp ;
 	
 void bargraphBlackOut(int setUpIO) ;
 int bargraphInit(void) ;
-int bargraphWrite(char *bargraph_label, float low_Limit, float high_Limit, int bargraph_mode, long int value) ;
+int bargraphWrite(char *bargraph_label, float low_Limit, float high_Limit, int bargraph_mode, long int value, int option) ;
 
 //======================================================================
 
-int bargraphWrite(char *bargraph_label, float low_Limit, float high_Limit, int bargraph_mode, long int value)
+int bargraphWrite(char *bargraph_label, float low_Limit, float high_Limit, int bargraph_mode, long int value, int option)
 { 	
 	//printf("\n !!! bargraph: %s - value: %d \n", bargraph_label, value) ;
 	int x = 0 ;
@@ -94,7 +94,7 @@ int bargraphWrite(char *bargraph_label, float low_Limit, float high_Limit, int b
 			
 				//======================================================
 				
-				case 0 : // green LEDs background bar for the full scale, but a unique red LED turning several times 
+				case 0 : // green LEDs background bar for the full scale, but a unique (optional) red LED turning several times 
 				         // for each of the smallest steps, for rotary encoder rotation indication guide
 				{
 					//printf("\n*** bargraph case 0 ***\n") ;
@@ -209,39 +209,41 @@ int bargraphWrite(char *bargraph_label, float low_Limit, float high_Limit, int b
 																
 						//printf("instructionByte: 0x%x - backgroundLEDs:%d 0x%x \n",instructionByte,backgroundLEDs,backgroundLEDs) ;
 															
-						// select the correct matrix red LEDs row, only one LED lighting, running along the bargraph for more precision :
+						// select the correct (optional, if "option == 1" only) matrix red LEDs row, only one LED lighting, running along the bargraph for more precision :
 						x = value / 4 ; // 4 consecutive same color leds blocs
 						//printf("### value:%d - x:%d - x/3:%d - even/odd:%d - x%3:%d - x%6:%d - x%9:%d \n", value, x, x/3, (x/3)%2, x%3, x%6, x%9) ;				
 						//printf("§§§ value:%d - page# x/3:%d - (x/3)/2:%d - ((x/3)/2)-1:%d - (8*((x/3)/2)):%d - (16*(((x/3)/2)-1)):%d \n",value,x/3,(x/3)/2,((x/3)/2)-1,(8*((x/3)/2)),(16*(((x/3)/2)-1)) ) ;
-		
-						if((x/3)%2==0) 
-						{ // even - (pair) - first 3 x 8 bits blocs (LSB)
-							switch (x%3) // LED row
-							{
-								case 0 :
-									{ value = 1 << (value - 0 -(8*((x/3)/2)) -(16*((x/3)/2))) ; instructionByte = 0x00 ; break ; }
-								case 1 : 
-									{ value = 1 << (value - 4 -(8*((x/3)/2)) -(16*((x/3)/2))) ; instructionByte = 0x02 ; break ; }
-								case 2 : 
-									{ value = 1 << (value - 8 -(8*((x/3)/2)) -(16*((x/3)/2))) ; instructionByte = 0x04 ; break ; }
+						if (option == 1)
+						{
+							if((x/3)%2==0) 
+							{ // even - (pair) - first 3 x 8 bits blocs (LSB)
+								switch (x%3) // LED row
+								{
+									case 0 :
+										{ value = 1 << (value - 0 -(8*((x/3)/2)) -(16*((x/3)/2))) ; instructionByte = 0x00 ; break ; }
+									case 1 : 
+										{ value = 1 << (value - 4 -(8*((x/3)/2)) -(16*((x/3)/2))) ; instructionByte = 0x02 ; break ; }
+									case 2 : 
+										{ value = 1 << (value - 8 -(8*((x/3)/2)) -(16*((x/3)/2))) ; instructionByte = 0x04 ; break ; }
+								}
 							}
-						}
-						else
-						{ // odd - (impair) - last 3 x 8 bits blocs (MSB)
-							switch (x%3) // LED row
-							{
-								case 0 :
-									{ value = 1 << (value -  8 -(8*((x/3)/2)) -(16*(((x/3)/2)))) ; instructionByte = 0x00 ; break ; }
-								case 1 : 
-									{ value = 1 << (value - 12 -(8*((x/3)/2)) -(16*(((x/3)/2)))) ; instructionByte = 0x02 ; break ; }
-								case 2 : 
-									{ value = 1 << (value - 16 -(8*((x/3)/2)) -(16*(((x/3)/2)))) ; instructionByte = 0x04 ; break ; }
+							else
+							{ // odd - (impair) - last 3 x 8 bits blocs (MSB)
+								switch (x%3) // LED row
+								{
+									case 0 :
+										{ value = 1 << (value -  8 -(8*((x/3)/2)) -(16*(((x/3)/2)))) ; instructionByte = 0x00 ; break ; }
+									case 1 : 
+										{ value = 1 << (value - 12 -(8*((x/3)/2)) -(16*(((x/3)/2)))) ; instructionByte = 0x02 ; break ; }
+									case 2 : 
+										{ value = 1 << (value - 16 -(8*((x/3)/2)) -(16*(((x/3)/2)))) ; instructionByte = 0x04 ; break ; }
+								}
 							}
+							
+							//printf(" === odd/even:%d - value: %d - setUpIO:%d - instructionByte: 0x%x - value: (%d) 0x%x ===\n\n", (x/3)%2, value, bargraph->bargraph_setUpIO, instructionByte, value, value) ;
+							
+							x = wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, value) ;
 						}
-						
-						//printf(" === odd/even:%d - value: %d - setUpIO:%d - instructionByte: 0x%x - value: (%d) 0x%x ===\n\n", (x/3)%2, value, bargraph->bargraph_setUpIO, instructionByte, value, value) ;
-						
-						x = wiringPiI2CWriteReg8(bargraph->bargraph_setUpIO, instructionByte, value) ;
 					}
 					break ;
 				}
@@ -773,7 +775,7 @@ int bargraphWrite(char *bargraph_label, float low_Limit, float high_Limit, int b
 				//======================================================
 								
 				case 5 : // green LEDs background bar for the full scale, no red led at all,
-				         // for "LIN" and "CENTER"ed rotary encoder rotation indication guide
+				         // for "CENTER"ed rotary encoder rotation indication guide
 				{
 					//printf("\n*** bargraph case 5 ***\n") ;
 					if (bargraph->bargraph_ref == "adafruit1721")
@@ -794,7 +796,7 @@ int bargraphWrite(char *bargraph_label, float low_Limit, float high_Limit, int b
 						}
 						else
 						{
-							ratio = (float) (value + values)  / values ;
+							ratio = (float) (value + values) / values ;
 						}
 						
 						dB = (20 * log10(ratio)) ;
