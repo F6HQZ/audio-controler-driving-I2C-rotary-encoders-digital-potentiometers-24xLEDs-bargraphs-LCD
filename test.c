@@ -142,9 +142,9 @@ int main (void)
 	// rotary encoder name, linked digipot name, pins for A and B, sequence, curve, ZERO position, reverse, looping, low limit, high limit, value at starting, timers...
 	setupencoder ("GAIN",  "DIGIPOT-GAIN",   0, 1,YES,"LIN","RIGHT",  NO,NO,   0,255, 50,500000,30000,15000,6000,10,25,50) ;  // pins 0 and 1
 	setupencoder ("VOLUME","DIGIPOT-VOLUME", 2, 3,YES,"LOG","RIGHT",  NO,NO,   0,255, 25,500000,30000,15000,6000,10,25,50) ;  // pins 2 and 3
-	setupencoder ("GRAVE", "DIGIPOT-GRAVE",  4, 5,YES,"LOG","CENTER", NO,NO,-127,128,  0,500000,30000,15000,6000,10,25,50) ;  // pins 4 and 5
-	setupencoder ("MEDIUM","DIGIPOT-MEDIUM", 6, 7,YES,"LOG","CENTER", NO,NO,-127,128,  0,500000,30000,15000,6000,10,25,50) ;  // pins 6 and 7
-	setupencoder ("AIGUE", "DIGIPOT-AIGUE", 10,11,YES,"LOG","CENTER", NO,NO,-127,128,  0,500000,30000,15000,6000,10,25,50) ;  // pins 10 and 11
+	setupencoder ("GRAVE", "DIGIPOT-GRAVE",  4, 5,YES,"LOG","CENTER", NO,NO,-127,127,  0,500000,30000,15000,6000,10,25,50) ;  // pins 4 and 5
+	setupencoder ("MEDIUM","DIGIPOT-MEDIUM", 6, 7,YES,"LOG","CENTER", NO,NO,-127,127,  0,500000,30000,15000,6000,10,25,50) ;  // pins 6 and 7
+	setupencoder ("AIGUE", "DIGIPOT-AIGUE", 10,11,YES,"LOG","CENTER", NO,NO,-127,127,  0,500000,30000,15000,6000,10,25,50) ;  // pins 10 and 11
 	setupencoder ("BOUCLE","DIGIPOT-BOUCLE",12,13,YES,"LOG","RIGHT",  NO,NO,   0,255,  0,500000,30000,15000,6000,10,25,50) ;  // pins 12 and 13
 	setupencoder ("SORTIE","DIGIPOT-SORTIE",14,21,YES,"LOG","RIGHT",  NO,NO,   0,255,  0,500000,30000,15000,6000,10,25,50) ;  // pins 14 and 21
 	setupencoder ("CASQUE","DIGIPOT-CASQUE",22,23,YES,"LOG","RIGHT",  NO,NO,   0,255,  0,500000,30000,15000,6000,10,25,50) ;  // pins 22 and 23
