@@ -338,7 +338,6 @@ void updateOneEncoder(unsigned char interrupt)
 							else if (encoder->curve == "LOG") 
 							{	
 								float ratio ;
-								float exact_closest_value ;
 								int closest_value ;
 								float value  ;
 								float dB ;
@@ -353,17 +352,18 @@ void updateOneEncoder(unsigned char interrupt)
 										dB = dB + (speed * step) ; // target level
 										value = (pow(10,(dB / 20)) * encoder->high_Limit) ;
 										closest_value = (int) value + 0.5 ; // closest digital value
+										
 										if (closest_value == encoder->value) {printf("*encoder_value*");encoder->value = encoder->value + (speed * step);} // for first very low values
 										else if (closest_value >= encoder->high_Limit) {printf("*high_Limit*");encoder->value = encoder->high_Limit;}
 										else if (closest_value <= encoder->low_Limit) {printf("*low_Limit*");encoder->value = encoder->low_Limit;}
 										else {printf("*closest_value*");encoder->value = closest_value;}	
 									}
+									/*
 									else // negative value
 									{
 										printf("\n--- encoder->value - ",encoder->value) ;
 										ratio = (float) encoder->value / encoder->low_Limit ;
 										dB = 20 * log10(ratio) - (speed * step) ;
-										//if (encoder->zero_dB_position == "CENTER") {dB = dB * 2 ;}
 										value = (pow(10,(dB / 20)) * encoder->low_Limit) ;
 										closest_value = (int) value - 0.5 ; // closest digital value
 										
@@ -375,58 +375,39 @@ void updateOneEncoder(unsigned char interrupt)
 										printf(" *** LOG *** Low_Limit:%d - High_Limit:%d - closest_value:%f - encoder_value:%d - value:%f - ratio:%f - dB:%f \n",
 													encoder->low_Limit,encoder->high_Limit,closest_value,encoder->value,value,ratio,dB) ;
 									}
+									*/
 								}
 								else if (encoder->zero_dB_position == "CENTER") 
 								{ 
 									if (encoder->value >= 0) 
 									{
-										printf("\n+++ encoder->value:%d - ", encoder->value) ;
 										ratio = (float) (encoder->value + encoder->high_Limit) / (encoder->high_Limit) ; 
 										dB = 20 * log10(ratio) ; // current level in dB
-										printf("\n----------------- current dB:%f --------------------",dB) ;
 										dB = dB + (float) (speed * step) / 2 ; // target level in dB
-										printf("\n----------------- next dB:%f --------------------",dB) ;
-										value = pow(10,(dB / 20)) * (encoder->high_Limit -1) ; // target digipot value 0 to 255
-										printf("\n----------------- NEXT DIGIPOT VALUE:%f --------------------",value) ;
-										//exact_closest_value = (value - encoder->high_Limit + 1) ; // target rotary encoder value -127 to +128
-										//printf("\n----------------- ROTARY ENCODER VALUE:%f --------------------",exact_closest_value) ;										
-										closest_value = (int) (value - encoder->high_Limit + 1 + 0.5) ; // target rotary encoder value -127 to +128
-										printf("\n----------------- CLOSEST ROTARY ENCODER VALUE:%d --------------------",closest_value) ;
-										printf("\n 1/ *** LOG *** encoder_value:%d - value:%f - closest_value:%d - ratio:%f - dB:%f \n",
-													encoder->value,value,closest_value,ratio,dB) ;		
-														
+										if (dB > -0.25 && dB < 0.25) { dB = 0 ; }
+										
+										value = (pow(10,(dB/20)) * (encoder->high_Limit -1)) - encoder->high_Limit + 1 ;
+										closest_value = (int) (value + 0.5) ; // target rotary encoder value, 1/2 dB each step
+													
 										if (closest_value == encoder->value) {printf("\n*encoder_value*\n");encoder->value = encoder->value + (speed * step);} // for first very low values
 										else if (closest_value >= encoder->high_Limit) {printf("\n*high_Limit*\n");encoder->value = encoder->high_Limit;}
 										else if (closest_value <= encoder->low_Limit) {printf("\n*low_Limit*\n");encoder->value = encoder->low_Limit;}
 										else {printf("\n*closest_value*\n");encoder->value = closest_value;}	
-										
-										printf("\n 2/ *** LOG *** encoder_value:%d - value:%f - closest_value:%d - ratio:%f - dB:%f \n",
-													encoder->value,value,closest_value,ratio,dB) ;
 									} 
 									else // negative value
 									{ 
-										printf("\n--- encoder->value:%d - ", encoder->value) ;
-										ratio = (float) encoder->high_Limit / (encoder->high_Limit - encoder->value) ; 
+										ratio = (float) encoder->low_Limit / (encoder->low_Limit + encoder->value) ; 
 										dB = 20 * log10(ratio) ; // current level in dB
-										printf("\n----------------- current dB:%f --------------------",dB) ;
-										dB = dB + (float) (speed * step) / 2 ; // target level in dB
-										printf("\n----------------- next dB:%f --------------------",dB) ;
-										value = pow(10,(dB / 20)) * (encoder->high_Limit -1) ; // target digipot value 0 to 255
-										printf("\n----------------- NEXT DIGIPOT VALUE:%f --------------------",value) ;
-										//exact_closest_value = (value - encoder->high_Limit + 1) ; // target rotary encoder value -127 to +128
-										//printf("\n----------------- ROTARY ENCODER VALUE:%f --------------------",exact_closest_value) ;										
-										closest_value = (int) (value - encoder->high_Limit + 1 - 0.5) ; // target rotary encoder value -127 to +128
-										printf("\n----------------- CLOSEST ROTARY ENCODER VALUE:%d --------------------",closest_value) ;
-										printf("\n 1/ *** LOG *** encoder_value:%d - value:%f - closest_value:%d - ratio:%f - dB:%f \n",
-													encoder->value,value,closest_value,ratio,dB) ;		
+										dB = dB + (float) (speed * step) / 2 ; // target level in dB, 1/2 dB each step 
+										if (dB > -0.25 && dB < 0.25) { dB = 0 ; }
+										
+										value = -((1/pow(10,(dB/20)) * (-encoder->low_Limit) -1) -127) ; 
+										closest_value = (int) (value - 0.5) ; // target rotary encoder value -127 to +128
 														
 										if (closest_value == encoder->value) {printf("\n*encoder_value*\n");encoder->value = encoder->value + (speed * step);} // for first very low values
 										else if (closest_value >= encoder->high_Limit) {printf("\n*high_Limit*\n");encoder->value = encoder->high_Limit;}
 										else if (closest_value <= encoder->low_Limit) {printf("\n*low_Limit*\n");encoder->value = encoder->low_Limit;}
 										else {printf("\n*closest_value*\n");encoder->value = closest_value;}	
-										
-										printf("\n 2/ *** LOG *** encoder_value:%d - value:%f - closest_value:%d - ratio:%f - dB:%f \n",
-													encoder->value,value,closest_value,ratio,dB) ;
 									} 
 								}
 							}
