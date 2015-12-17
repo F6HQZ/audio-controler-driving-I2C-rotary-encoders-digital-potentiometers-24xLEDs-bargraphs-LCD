@@ -379,42 +379,36 @@ void updateOneEncoder(unsigned char interrupt)
 								}
 								else if (encoder->zero_dB_position == "CENTER") 
 								{ 
-									if (encoder->value >= 0) 
+									if (encoder->value >= 0) { ratio = (float) (encoder->value + encoder->high_Limit) / (encoder->high_Limit) ; }
+									else { ratio = (float) encoder->low_Limit / (encoder->low_Limit + encoder->value) ; } // negative value
+									
+									dB = 20 * log10(ratio) ; // current level in dB									
+									dB = dB + (float) (speed * step) / 2 ; // exact target level in dB
+									dB = dB / 0.5 ;
+									
+									if (dB > 0) { dB = (int) (dB + 0.5) ; } // 0.5 steps closest value 
+									else { dB = (int) (dB - 0.5) ; } // 0.5 steps closest value
+									
+									dB = dB * 0.5 ;
+									
+									if (dB > 0)
 									{
-										ratio = (float) (encoder->value + encoder->high_Limit) / (encoder->high_Limit) ; 
-										dB = 20 * log10(ratio) ; // current level in dB
-										dB = dB + (float) (speed * step) / 2 ; // target level in dB
-										if (dB > -0.25 && dB < 0.25) { dB = 0 ; }
-										
-										value = (pow(10,(dB/20)) * (encoder->high_Limit -1)) - encoder->high_Limit + 1 ;
-										closest_value = (int) (value + 0.5) ; // target rotary encoder value, 1/2 dB each step
-													
-										if (closest_value == encoder->value) {printf("\n*encoder_value*\n");encoder->value = encoder->value + (speed * step);} // for first very low values
-										else if (closest_value >= encoder->high_Limit) {printf("\n*high_Limit*\n");encoder->value = encoder->high_Limit;}
-										else if (closest_value <= encoder->low_Limit) {printf("\n*low_Limit*\n");encoder->value = encoder->low_Limit;}
-										else {printf("\n*closest_value*\n");encoder->value = closest_value;}	
+										value = (pow(10,(dB/20)) * (encoder->high_Limit+1)-1) - encoder->high_Limit ; // exact target rotary encoder value, 1/2 dB each step
+										closest_value = (int) (value + 0.5) ; // (decimal digits suppressed) target rotary encoder value, 1/2 dB each step
 									} 
-									else // negative value
+									else // negative value, next rotary encoder value
 									{ 
-										ratio = (float) encoder->low_Limit / (encoder->low_Limit + encoder->value) ; 
-										dB = 20 * log10(ratio) ; // current level in dB
-										dB = dB + (float) (speed * step) / 2 ; // target level in dB, 1/2 dB each step 
-										if (dB > -0.25 && dB < 0.25) { dB = 0 ; }
-										
-										value = -((1/pow(10,(dB/20)) * (-encoder->low_Limit) -1) -127) ; 
-										closest_value = (int) (value - 0.5) ; // target rotary encoder value -127 to +128
-														
-										if (closest_value == encoder->value) {printf("\n*encoder_value*\n");encoder->value = encoder->value + (speed * step);} // for first very low values
-										else if (closest_value >= encoder->high_Limit) {printf("\n*high_Limit*\n");encoder->value = encoder->high_Limit;}
-										else if (closest_value <= encoder->low_Limit) {printf("\n*low_Limit*\n");encoder->value = encoder->low_Limit;}
-										else {printf("\n*closest_value*\n");encoder->value = closest_value;}	
+										value = -((1/pow(10,(dB/20)) * (-encoder->low_Limit+1)-1) + encoder->low_Limit) ; // exact target rotary encoder value, 1/2 dB each step
+										closest_value = (int) (value - 0.5) ; // (decimal digits suppressed) target rotary encoder value -127 to +128
 									} 
+									
+									if (closest_value == encoder->value) {printf("\n*encoder_value*\n");encoder->value = encoder->value + (speed * step);} // for first very low values
+									else if (closest_value >= encoder->high_Limit) {printf("\n*high_Limit*\n");encoder->value = encoder->high_Limit;}
+									else if (closest_value <= encoder->low_Limit) {printf("\n*low_Limit*\n");encoder->value = encoder->low_Limit;}
+									else {printf("\n*closest_value*\n");encoder->value = closest_value;}	
 								}
 							}
-							else
-							{
-								printf("\n!!! curve not recognized!!!\n") ;
-							}
+							else { printf("\n!!! curve not recognized!!!\n") ; }
 						}
 						else
 						{
