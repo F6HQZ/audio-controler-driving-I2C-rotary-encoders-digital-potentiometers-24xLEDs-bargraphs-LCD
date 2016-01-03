@@ -3,7 +3,7 @@
  * "digital-pot" libraries.
  * No more interest, except curiosity or learning.
  * You must use your own to integrate that workshop into your audio project.
- * V.1.2.1
+ * V 1.2.1
  */
 
 /*=======================================================================\
@@ -94,7 +94,7 @@ extern int speed ;
 
 int voltmeterInput ; // select one of the 4 AD converter inputs;
 unsigned long int voltmeterReadingInterval = 1 ; // microsecondes
-unsigned int voltmeterTempo = 500 ; // bargraph is displaying voltmeter measurement a while (ms) after stop to play with knobs (rotary encoders)
+unsigned int voltmeterTempo = 750 ; // bargraph is displaying voltmeter measurement rather the adjusting rotary encoder value a while (ms) after stop to play with knobs (rotary encoders)
 unsigned long int voltmeterTimer ; // to let some time between two consecutive measurements
 unsigned long int voltmeterTimer2 ; // used to let the Bargraph displaying the Rotary Encoder postion before to display the real time measured audio value, works with "voltmeterTempo"
 char VuMeterWakeUp = 0 ;
@@ -140,14 +140,17 @@ int main (void)
 	// rotary encoders declaration :
 	struct encoder *encoder = 
 	// rotary encoder name, linked digipot name, pins for A and B, sequence, curve, ZERO position, reverse, looping, low limit, high limit, value at starting, timers...
-	setupencoder ("GAIN",  "DIGIPOT-GAIN",   0, 1,YES,"LIN","RIGHT",  NO,NO,   0,255, 50,500000,30000,15000,6000,10,25,50) ;  // pins 0 and 1
-	setupencoder ("VOLUME","DIGIPOT-VOLUME", 2, 3,YES,"LOG","RIGHT",  NO,NO,   0,255, 25,500000,30000,15000,6000,10,25,50) ;  // pins 2 and 3
-	setupencoder ("GRAVE", "DIGIPOT-GRAVE",  4, 5,YES,"LOG","CENTER", NO,NO,-127,127,  0,500000,30000,15000,6000,10,25,50) ;  // pins 4 and 5
-	setupencoder ("MEDIUM","DIGIPOT-MEDIUM", 6, 7,YES,"LOG","CENTER", NO,NO,-127,127,  0,500000,30000,15000,6000,10,25,50) ;  // pins 6 and 7
+	//setupencoder ("GAIN",  "DIGIPOT-GAIN",    0, 1,YES,"LIN","RIGHT",  NO,NO,   0, 255, 50,500000,30000,15000,6000,10,25,50) ;  // pins 0 and 1
+	setupencoder ("GAIN",  "SUPERDIGIPOT-GAIN", 0, 1,YES,"LIN","RIGHT",  NO,NO,   0,1023, 50,500000,30000,15000,6000,10,25,50) ;  // pins 0 and 1
+	setupencoder ("VOLUME","DIGIPOT-VOLUME",    2, 3,YES,"LOG","RIGHT",  NO,NO,   0, 255, 25,500000,30000,15000,6000,10,25,50) ;  // pins 2 and 3
+	setupencoder ("GRAVE", "DIGIPOT-GRAVE",     4, 5,YES,"LOG","CENTER", NO,NO,-127, 127,  0,500000,30000,15000,6000,10,25,50) ;  // pins 4 and 5
+	setupencoder ("MEDIUM","DIGIPOT-MEDIUM",    6, 7,YES,"LOG","CENTER", NO,NO,-127, 127,  0,500000,30000,15000,6000,10,25,50) ;  // pins 6 and 7
+	/*
 	setupencoder ("AIGUE", "DIGIPOT-AIGUE", 10,11,YES,"LOG","CENTER", NO,NO,-127,127,  0,500000,30000,15000,6000,10,25,50) ;  // pins 10 and 11
 	setupencoder ("BOUCLE","DIGIPOT-BOUCLE",12,13,YES,"LOG","RIGHT",  NO,NO,   0,255,  0,500000,30000,15000,6000,10,25,50) ;  // pins 12 and 13
 	setupencoder ("SORTIE","DIGIPOT-SORTIE",14,21,YES,"LOG","RIGHT",  NO,NO,   0,255,  0,500000,30000,15000,6000,10,25,50) ;  // pins 14 and 21
 	setupencoder ("CASQUE","DIGIPOT-CASQUE",22,23,YES,"LOG","RIGHT",  NO,NO,   0,255,  0,500000,30000,15000,6000,10,25,50) ;  // pins 22 and 23
+	*/
 	printf("rotary encoders declaration end \n") ;
 	
 	printf("buttons declaration start \n") ;
@@ -179,8 +182,13 @@ int main (void)
 	printf("digipots declaration start \n") ;
 	// digipots declaration :
 	struct digipot *digipot = 
-	setupdigipot("0",0x2c,4,"AD5263",200000,256,"DIGIPOT-GAIN","LIN","RIGHT","DIGIPOT-VOLUME","LOG","RIGHT","DIGIPOT-GRAVE","LOG","CENTER","DIGIPOT-MEDIUM","LOG","CENTER","","","","","","","","","","","","") ; // 0=I2C (1=SPI), addr, channels, ref, Ohms, positions, name#1, LOG/LIN, RIGHT/CENTER, name#2, ...
-	setupdigipot("0",0x2d,4,"AD5263",200000,256,"DIGIPOT-AIGUE","LOG","CENTER","DIGIPOT-BOUCLE","LOG","RIGHT","DIGIPOT-SORTIE","LOG","RIGHT","DIGIPOT-CASQUE","LOG","RIGHT","","","","","","","","","","","","") ; 
+	setupdigipot("0",0x2c,4,"AD5263",200000,256,"DIGIPOT-GAIN","LIN","RIGHT","DIGIPOT-VOLUME","LOG","RIGHT","DIGIPOT-GRAVE","LOG","CENTER","DIGIPOT-MEDIUM","LOG","CENTER","","","","","","","","","","","","","",0,"","","","","","","","",0,0,0,0,0,0,0,0) ; // 0=I2C (1=SPI), addr, channels, ref, Ohms, positions, name#1, LOG/LIN, RIGHT/CENTER, name#2, ...
+	//setupdigipot("0",0x2d,4,"AD5263",200000,256,"DIGIPOT-AIGUE","LOG","CENTER","DIGIPOT-BOUCLE","LOG","RIGHT","DIGIPOT-SORTIE","LOG","RIGHT","DIGIPOT-CASQUE","LOG","RIGHT","","","","","","","","","","","","","",0,"","","","","","","","",0,0,0,0,0,0,0,0) ; 
+	setupdigipot("0",0x2f,4,"AD5263",200000,256,"DIGIPOT-GAIN-1","LIN","RIGHT","DIGIPOT-GAIN-2","LIN","RIGHT","DIGIPOT-GAIN-3","LIN","RIGHT","DIGIPOT-GAIN-4","LIN","RIGHT","","","","","","","","","","","","","",0,"","","","","","","","",0,0,0,0,0,0,0,0) ; // SUPERDIGIPOT description, something as "virtual", composed with a stack of further real digipots 
+	setupdigipot("",0,1,"SUPERDIGIPOT",800000,1024,"SUPERDIGIPOT-GAIN","LIN","RIGHT","","","","","","","","","","","","","","","","","","","","","","SERIAL",4,"DIGIPOT-GAIN-1","DIGIPOT-GAIN-2","DIGIPOT-GAIN-3","DIGIPOT-GAIN-4","","","","",214,215,216,217,0,0,0,0) ;
+	//setupdigipot("",0,1,"STEREO-DIGIPOT",200000,256,"SUPERDIGIPOT-VOLUME","LIN","RIGHT","","","","","","","","","","","","","","","","","","","","","","PARALLEL",2,"DIGIPOT-VOLUME-1","DIGIPOT-VOLUME-2","","","","","","",0,0,0,0,0,0,0,0) ;
+	//setupdigipot("",0,1,"QUAD-DIGIPOT",200000,256,"SUPERDIGIPOT-VOLUME","LIN","RIGHT","","","","","","","","","","","","","","","","","","","","","","PARALLEL",4,"DIGIPOT-VOLUME-1","DIGIPOT-VOLUME-2","DIGIPOT-VOLUME-3","DIGIPOT-VOLUME-4","","","","",0,0,0,0,0,0,0,0) ;
+	//setupdigipot("",0,1,"OCTO-DIGIPOT",200000,256,"SUPERDIGIPOT-VOLUME","LIN","RIGHT","","","","","","","","","","","","","","","","","","","","","","PARALLEL",8,"DIGIPOT-VOLUME-1","DIGIPOT-VOLUME-2","DIGIPOT-VOLUME-3","DIGIPOT-VOLUME-4","DIGIPOT-VOLUME-5","DIGIPOT-VOLUME-6","DIGIPOT-VOLUME-7","DIGIPOT-VOLUME-8",0,0,0,0,0,0,0,0) ;
 	printf("digipots declaration end \n") ;
 	
 	printf("bargraphs declaration start \n") ;
@@ -193,7 +201,7 @@ int main (void)
 	// converters modules declaration :
 	struct extension_module *extension_module =
 	setupModule("ANALOG-CONVERTER#1","GAIN","VOLUME","SORTIE","CASQUE","","","","","PCF8591","0",0x48,200,4) ; // chip name, name of chan#0, chan#1, chan#2, chan#3, chan#4, chan#5, chan#6, chan#7, chip type, bus type, bus address, I/O pins base (>64 and different of the others)
-	setupModule("DIGITAL-OUTPUT#1","RELAY#1","RELAY#2","RELAY#3","RELAY#4","RELAY#5","RELAY#6","RELAY#7","RELAY#8","PCF8574","0",0x3e,210,8) ;
+	setupModule("DIGITAL-OUTPUT#1","RELAY#1","RELAY#2","RELAY#3","RELAY#4","RELAY#5","RELAY#6","RELAY#7","RELAY#8","PCF8574","0",0x3d,210,8) ;
 	printf("A/D D/A converters and Digit I/O extensions modules declaration end \n") ;
 	
 	extern numberofencoders ;
@@ -212,19 +220,24 @@ int main (void)
 		int loop = 0 ;
 		for (; loop < digipot->digipot_channels ; loop++)
 			{
-				printf("DIGIPOT:[%d]: \"%s\" - Curve:%s - Zero dB position:%s \n", loop, digipot->digipot_label[loop],digipot->digipot_curve[loop], digipot->digipot_0_position[loop]) ;
+				printf("DIGIPOT[%d]: \"%s\" - Curve:%s - Zero dB position:%s \n", loop, digipot->digipot_label[loop],digipot->digipot_curve[loop], digipot->digipot_0_position[loop]) ;
 			}
-		printf("BUS Type: %s \n address: %d \n chipset ref: %s \n R value: %d \n Wiper positions: %d \n channels: %d \n mem address: 0x%x \n-----------------\n", 
-			digipot->digipot_bus_type, digipot->digipot_address, digipot->digipot_reference, digipot->digipot_ohms, digipot->wiper_positions, digipot->digipot_channels, digipot) ; 
+		loop = 0 ;
+		for (; loop < digipot->digipot_group_qty ; loop++)
+			{
+				printf("REAL-DIGIPOT[%d]: \"%s\" - switch:%d \n", loop, digipot->digipot_single_name[loop], digipot->digipot_switch[loop]) ;
+			}
+		printf("BUS Type: %s \n address: %d \n chipset ref: %s \n R value: %d \n Wiper positions: %d \n channels: %d \n group_type: %s \n group_qty: %d \nmem address: 0x%x \n-----------------\n", 
+			digipot->digipot_bus_type, digipot->digipot_address, digipot->digipot_reference, digipot->digipot_ohms, digipot->wiper_positions, digipot->digipot_channels, digipot->digipot_group_type, digipot->digipot_group_qty, digipot) ; 
 	}
-		printf("\nEXTENSIONS-MODULES list :\n-----------------\n") ;
-		
+	
+	printf("\nEXTENSIONS-MODULES list :\n-----------------\n") ;
 	for (; extension_module < modules + numberofmodules ; extension_module++)
 	{ 
 		int loop = 0 ;
 		for (; loop < extension_module->module_channels ; loop++)
 			{
-				printf("EXTENSIONS-MODULE:[%d]: \"%s\" \n", loop, extension_module->module_input_name[loop]) ;
+				printf("EXTENSIONS-MODULE:[%d]: \"%s\" pin#:%d\n", loop, extension_module->module_input_name[loop],extension_module->module_pinBase+loop) ;
 			}
 		printf("BUS Type: %s \n address: %d \n chipset ref: %s \n module label: %s \n mem address: 0x%x \n-----------------\n", 
 			extension_module->module_bus_type, extension_module->module_address, extension_module->module_type, extension_module->module_label, extension_module) ; 
@@ -262,12 +275,13 @@ int main (void)
 */
 
 	// =================================================================
+	
 	// main loop is starting here :
 	while (1)
 	{
 		//delay (10) ; // 10 ms default, decreasing the loop speed (and the CPU load from about 25% to minus than 0.3%)
-		digitalWrite (LED_DOWN, OFF) ;	// OFF
-		digitalWrite (LED_UP, OFF) ; 	// OFF
+		//digitalWrite (LED_DOWN, OFF) ;
+		//digitalWrite (LED_UP,   OFF) ;
 
 		int step = 0 ;
 		unsigned char print = 0 ;
@@ -313,7 +327,6 @@ int main (void)
 						print = 1 ;
 						//printf("\n*** Encoder: %s Curve: %s \n", encoder->label, encoder->curve) ;
 						//printf("\n +++ reading DIGIPOT: \"%s\" \n", encoder->drived_Entity) ;
-//						double x = digipotRead(encoder->drived_Entity) ; // read the attached digipot
 						found = 1 ;
 						break ;
 					}
@@ -329,7 +342,7 @@ int main (void)
 			++step ;	
 		}	
 		
-		// modify what is displayed on LCD and BARGRAPH when touched any rotary encoder
+		// select the correct analog voltmeter source to display as VU-Meter later when touched any rotary encoder
 		if ((touched != "0") && (touched != "1"))
 		{	// printf("\n > touched:%s %d", touched, touched) ;
 			struct extension_module *extension_module = modules ;
@@ -347,15 +360,14 @@ int main (void)
 				}
 				if (voltmeterInput > 0) { break ; }
 			}
-//			printf("\n >>> touched:%s - voltmeterInput:%d", touched, voltmeterInput) ;
+			//printf("\n >>> touched:%s - voltmeterInput:%d", touched, voltmeterInput) ;
 
-			// display the value on bargraph and LCD
-			displayShow("", "") ; // restart immediatly the LCD display backlight without to delete the already displayed info
+			// temporary display touched rotary encoder value on the LEDs Bargraph when turning or pushing it
 			struct encoder *encoder = encoders ;
 			for (; encoder < encoders + numberofencoders ; encoder++)
 			{
-				if (encoder->label == touched)
-				{	// temporary display encoder value on Bargraph when turning or pushing it
+				if (encoder->label == touched) // found what is the last touched rotary encoder 
+				{	
 					//printf("\n*** Encoder: %s Curve: %s \n", encoder->label, encoder->curve) ;
 					if (encoder->curve == "LIN")
 					{
@@ -375,6 +387,7 @@ int main (void)
 						if (encoder->zero_dB_position == "RIGHT")
 						{
 							bargraphWrite("BARGRAPH", encoder->low_Limit, encoder->high_Limit, 4, encoder->value, 0) ;
+							//printf("Low:%d _ High:%d - Value:%d",encoder->low_Limit,encoder->high_Limit,encoder->value) ;
 						}
 						else if (encoder->zero_dB_position == "CENTER")
 						{
@@ -383,10 +396,11 @@ int main (void)
 					}
 					else
 					{
-						printf("\n!!! curve not recognized for this reotary encoder !!!\n") ;
+						printf("\n!!! curve not recognized for this rotary encoder !!!\n") ;
 					}
 					
 					// display digipot position value and attenuation in dB to LCD Display
+					displayShow("", "") ; // restart immediatly the LCD display backlight without to delete the already displayed info
 					struct digipot *digipot = digipots ;	
 					for (; digipot < digipots + numberofdigipots ; digipot++)
 					{
@@ -398,7 +412,7 @@ int main (void)
 							{
 								// display to LCD
 								char textBuffer[16] ;
-								sprintf(textBuffer, "%-5d%8.2f dB", encoder->value, digipot->digipot_att[loop]) ; // to char type conversion
+								sprintf(textBuffer, "%-5d%8.1f dB", encoder->value, digipot->digipot_att[loop]) ; // to char type conversion
 								displayShow(encoder->label, textBuffer) ;	
 								found = 1 ;
 								break ;
@@ -410,18 +424,17 @@ int main (void)
 					break ;
 				}
 			}
-			touched = "0" ; // reset the touched value
+			touched = "0" ; // reset the touched memo value
 			voltmeterTimer2 = millis() ; // reset pause measurement timer
-			print = 1 ; // display on video screen for debugging
+			print = 1 ; // display on HDMI video screen for debugging
 		}	
 		
 		// it's time to return to analog measurements
-//		if ((backlightStatus == OFF) && ((micros() - voltmeterTimer) > voltmeterReadingInterval))
 		if (((millis() - voltmeterTimer2) > voltmeterTempo ) && ((micros() - voltmeterTimer) > voltmeterReadingInterval))
 		{	// read the analog input and update the bargraph value
 			int peakValue = 0 ;
 			int value = 0 ;
-//			printf("\n --- touched:%s - bargraphInput:%s - voltmeterInput:%d", touched, bargraphInput, voltmeterInput) ;
+			//printf("\n --- touched:%s - bargraphInput:%s - voltmeterInput:%d", touched, bargraphInput, voltmeterInput) ;
 			long int sampleDuration = 0 ;
 			long int sampleStartingTime = micros() ;
 			int loop = 0 ;
@@ -435,7 +448,7 @@ int main (void)
 						peakValue = value ; // peak memo after few analog samples
 					}		
 					sampleDuration = micros() - sampleStartingTime ;
-	//				printf("loop:%d - value:%d - peakValue:%d - ", loop, value, peakValue) ;
+					//printf("loop:%d - value:%d - peakValue:%d - ", loop, value, peakValue) ;
 				}
 			}
 			else 
@@ -444,7 +457,7 @@ int main (void)
 			}
 			bargraphWrite("BARGRAPH", 0, 255, 2, (long int) peakValue, 0) ; // datas : bargraph name, min, max, VU-Meter type: 1 normal linear with one long green bar zone + 1 small amber bar + 1 small red bar, 2 same but logarythmic, 3 Digital log Peak meter ie green bar and only one RED (for max value)
 			voltmeterTimer = micros() ; // reset gap timer
-//			printf("\n ~~~ value:%d - sampleDuration:%d", value, sampleDuration) ;
+			//printf("\n ~~~ value:%d - sampleDuration:%d", value, sampleDuration) ;
 		}
 		
 		//--------------------------------------------------------------
@@ -475,43 +488,57 @@ int main (void)
 			}
 			printf("For all, cancelled bounces: %-5d \n\n", bounces) ;
 			
+			// direct reading of the digipots values
 			int x = -1 ;
 			struct digipot *digipot = digipots ;	
 			for (; digipot < digipots + numberofdigipots ; digipot++)
 			{
 				int loop = 0 ;
-				//int found = 0 ;
-				//float ratio ;
-				//float dB ;
-				
 				for (; loop < digipot->digipot_channels ; loop++)
 				{
-					int slaveAddressByte = digipot->digipot_address << 1 | 0b0 ; // prepare the first byte including the internal sub digipot address, only for displaying and tests, because it's sent automaticaly by wiringpi itself, don't care !
-					int instructionByte = loop << 5 ; // this is the "int reg", the second I2C byte sent by wiringpi
-					wiringPiI2CWriteReg8(digipot->digipot_setUpIO, instructionByte, digipot->digipot_value[loop]) ; // send the complete I2C frame to the chip, rewrite the current wipper value, because the READ instruction get the last writed digipot
-					x = wiringPiI2CRead(digipot->digipot_setUpIO) ;	// read the last digipot's channel previously writed
-					if (x > -1)
-					{ 
-						//float tap = -(x - digipot->wiper_positions) ;
-						int tap = -(x - digipot->wiper_positions) ;
-				
-						printf(">>> Digipot Read addr: Ox%x=%d - setUpIO: 0x%x=%d - slaveAddrByte: 0x%x=%d - instrucByte: 0x%2x=%3d - dataByte: 0x%2x=%3d - value:%5d - tap:%3.0d - att:%3.2f(dB) \n", 
-								digipot->digipot_address, digipot->digipot_address, digipot->digipot_setUpIO, digipot->digipot_setUpIO, slaveAddressByte, slaveAddressByte, instructionByte, instructionByte, x, x, digipot->digipot_value[loop], tap, digipot->digipot_att[loop]) ; 
-
-						//printf("\n =+= Loop:%d - Label:%s - Positions:%d - Tap:%d - Ratio:%f - dB:%f - DigipotValue:%d \n",loop,digipot->digipot_label[loop],digipot->wiper_positions,tap,ratio,dB,digipot->digipot_value[loop]) ;
+					if (digipot->digipot_group_qty == 0) // only for real digipot, not SUPERDIGIPOT using a stack of real digipots
+					{
+						//printf("\n real digipot - digipot_group_qty: %d \n", digipot->digipot_group_qty) ;
+						int slaveAddressByte = digipot->digipot_address << 1 | 0b0 ; // prepare the first byte including the internal sub digipot address, only for displaying and tests, because it's sent automaticaly by wiringpi itself, don't care !
+						int instructionByte = loop << 5 ; // this is the "int reg", the second I2C byte sent by wiringpi
+						wiringPiI2CWriteReg8(digipot->digipot_setUpIO, instructionByte, digipot->digipot_value[loop]) ; // send the complete I2C frame to the chip, rewrite the current wipper value, because the READ instruction get the last writed digipot
+						x = wiringPiI2CRead(digipot->digipot_setUpIO) ;	// read the last digipot's channel previously writed
+						if (x > -1)
+						{ 
+							int tap = -(x - digipot->wiper_positions) ;
+					
+							printf(">>> Digipot: %-15s Read addr: Ox%x=%d - setUpIO: 0x%x=%d - slaveAddrByte: 0x%x=%d - instrucByte: 0x%2x=%3d - dataByte: 0x%2x=%3d - value:%5d - tap:%4.0d - att:%3.2f(dB) \n", 
+									digipot->digipot_label[loop], digipot->digipot_address, digipot->digipot_address, digipot->digipot_setUpIO, digipot->digipot_setUpIO, slaveAddressByte, slaveAddressByte, instructionByte, instructionByte, x, x, digipot->digipot_value[loop], tap, digipot->digipot_att[loop]) ; 
+	
+							//printf("\n =+= Loop:%d - Label:%s - Positions:%d - Tap:%d - Ratio:%f - dB:%f - DigipotValue:%d \n",loop,digipot->digipot_label[loop],digipot->wiper_positions,tap,ratio,dB,digipot->digipot_value[loop]) ;
+						}
+						else
+						{ 
+							printf("\n !!! Digipot Read error !!! \n") ; 
+						}
 					}
-					else
-					{ 
-						printf("\n !!! Digipot Read !!! error\n") ; 
+					else // reading the superdigipot (virtual)
+					{
+						//int tap = -(x - digipot->wiper_positions) ;
+						int tap = -(digipot->digipot_value[loop] - digipot->wiper_positions) ;
+						//printf("\n superdigipot - digipot_group_qty: %d \n", digipot->digipot_group_qty) ;
+						printf(">>> SuperDigipot: %-15s - stack of: ( ", digipot->digipot_label[loop]) ;
+						int loop = 0 ;
+						for (; loop < digipot->digipot_group_qty ; loop++)
+						{
+							printf("%s ", digipot->digipot_single_name[loop]) ;
+						}	
+						printf(") %25s- value:%5d - tap:%4.0d - att:%3.2f(dB) \n", " ", digipot->digipot_value[0], tap, digipot->digipot_att[0]) ; 
 					}
 				}
 			}
 					
-			// read the analog I2C module equiped with a PCF8591
+			// read the analog I2C module equiped with a PCF8591 (analog) or a PCF8574 (digital) for inputs extensions
 			struct extension_module *extension_module = modules ;
 			for (; extension_module < modules + numberofmodules ; extension_module++)
 			{ 
-				int loop = 0 ;					
+				int loop = 0 ;				
+				printf("\n") ;	
 				for (; loop < extension_module->module_channels ; loop++)
 				{
 					int voltmeterInput =  0 ;
@@ -530,12 +557,12 @@ int main (void)
 					}
 					if (extension_module->module_type == "PCF8591")
 					{
-	//					printf ("### Analog Input #%d  %5.2f (peak) \n", voltmeterInput, (double)value * 3.3 / 255) ; // for 3.3V powered
-						printf ("### Analog Input #%d  %5.2f (peak) \n", voltmeterInput, (double)value * 5 / 255) ; // for 5V powered
+						//printf("### Analog Input #%d  %5.2f (peak) \n", voltmeterInput, (double)value * 3.3 / 255) ; // for 3.3V powered
+						printf("### Analog Input #%d  %5.2f (peak) \n", voltmeterInput, (double)value * 5 / 255) ; // for 5V powered
 					}
 					else if (extension_module->module_type == "PCF8574")
 					{
-						printf ("### Digital Input #%d  %d \n", voltmeterInput, value) ; 
+						printf("### Digital Input #%d  %d \n", voltmeterInput, value) ; // ON/OFF 0/1
 					}
 				} 
 			}
