@@ -4,7 +4,7 @@
  * To be used with digital-pot.c digital-pot.h I2C-Display.c rotaryencoder.c 
  * and rotaryencoder.h bargraph.h bargraph.c libraries.
  * 
- * V.1.0.0
+ * V 1.0.0
  */
 
 /*=======================================================================\
@@ -59,6 +59,7 @@
 #include <pcf8591.h>
 #include <pcf8574.h>
 
+#include "binary-values.h"
 #include "extensions-modules.h"
 
 struct extension_module *setupModule(char *module_label, 
@@ -140,13 +141,31 @@ struct extension_module *setupModule(char *module_label,
 	
 	if (module_type == "PCF8591")
 	{
-		pcf8591Setup(module_pinBase, module_address) ;
-		printf("pcf8591#:0x%x I2C:0x%x Pinbase:%d - init done ! \n", modules, module_address, module_pinBase) ;
+		int moduleInit ;
+		moduleInit = pcf8591Setup(module_pinBase, module_address) ;
+		if (moduleInit < 0) { printf("\n!!! pcf8591: Unable to initialize this module: %s\n", strerror (errno)) ; }	
+		else { printf("pcf8591#:0x%x I2C:0x%x Pinbase:%d - init done ! \n", modules, module_address, module_pinBase) ; }
 	}
 	else if (module_type == "PCF8574")
 	{
-		pcf8574Setup(module_pinBase, module_address) ;
-		printf("pcf8574#:0x%x I2C:0x%x Pinbase:%d - init done ! \n", modules, module_address, module_pinBase) ;
+		int moduleInit ;
+		moduleInit = pcf8574Setup(module_pinBase, module_address) ;
+		if (moduleInit < 0) { printf("\n!!! pcf8574: Unable to initialize this module: %s\n", strerror (errno)) ; }	
+		else { printf("pcf8574#:0x%x I2C:0x%x Pinbase:%d - init done ! \n", modules, module_address, module_pinBase) ; }
+		
+/*		// check all the digital outputs in sequence, you can use LEDs or a voltmeter to see the output logical level change - optional -
+		loop = 0 ;
+		for (; loop < module_channels ; loop++)
+		{	// test of all of the outputs
+			pinMode(module_pinBase+loop, OUTPUT) ; // prepare the digital IO as output
+			delay (100) ;				// mS
+			digitalWrite(module_pinBase+loop, 1) ; // switch ON all the digital output 
+			delay (500) ;			    // mS
+			digitalWrite(module_pinBase+loop, 0) ; // switch OFF all the digital output
+			delay (100) ;               // mS
+		}
+		delay (500) ;               // mS
+*/		
 	}
 	
 	return newmodule ;
