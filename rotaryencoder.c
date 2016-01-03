@@ -1,7 +1,7 @@
 /* rotaryencoder.c :
  * Just another library for rotary encoders on Raspberry Pi.
  * Needs its rotaryencoder.h file companion and "wiringPi" LPGLv3 lib.
- * V.1.1.1
+ * V 1.1.2
  */
  
 /*=======================================================================\
@@ -294,7 +294,7 @@ void updateOneEncoder(unsigned char interrupt)
 								float dB = 20 * log10(ratio) + (speed * - step) ;
 								//printf(" *** RIGHT *** Limit:%d - value:%d - ratio:%f - dB:%f",encoder->high_Limit,encoder->value,ratio,dB) ;
 								value = (pow(10,(dB / 20)) * encoder->high_Limit) ;
-								closest_value = value + 0.51 ; // closest digital value
+								closest_value = value + 0.5 ; // closest digital value
 								
 								if (closest_value == encoder->value) {encoder->value = encoder->value + (speed * - step);}
 								else if (closest_value >= encoder->high_Limit) {encoder->value = encoder->high_Limit;}
@@ -346,17 +346,17 @@ void updateOneEncoder(unsigned char interrupt)
 								{ 
 									if (encoder->value >= 0) 
 									{
-										printf("\n+++ encoder->value:%d - ", encoder->value) ;
+										//printf("\n+++ encoder->value:%d - ", encoder->value) ;
 										ratio = (float) encoder->value / (encoder->high_Limit) ; 
 										dB = 20 * log10(ratio) ; // previous level
 										dB = dB + (speed * step) ; // target level
 										value = (pow(10,(dB / 20)) * encoder->high_Limit) ;
 										closest_value = (int) value + 0.5 ; // closest digital value
 										
-										if (closest_value == encoder->value) {printf("*encoder_value*");encoder->value = encoder->value + (speed * step);} // for first very low values
-										else if (closest_value >= encoder->high_Limit) {printf("*high_Limit*");encoder->value = encoder->high_Limit;}
-										else if (closest_value <= encoder->low_Limit) {printf("*low_Limit*");encoder->value = encoder->low_Limit;}
-										else {printf("*closest_value*");encoder->value = closest_value;}	
+										if (closest_value == encoder->value) {encoder->value = encoder->value + (speed * step);} // for first very low values
+										else if (closest_value >= encoder->high_Limit) {encoder->value = encoder->high_Limit;}
+										else if (closest_value <= encoder->low_Limit) {encoder->value = encoder->low_Limit;}
+										else {encoder->value = closest_value;}	
 									}
 									/*
 									else // negative value
@@ -402,10 +402,10 @@ void updateOneEncoder(unsigned char interrupt)
 										closest_value = (int) (value - 0.5) ; // (decimal digits suppressed) target rotary encoder value -127 to +128
 									} 
 									
-									if (closest_value == encoder->value) {printf("\n*encoder_value*\n");encoder->value = encoder->value + (speed * step);} // for first very low values
-									else if (closest_value >= encoder->high_Limit) {printf("\n*high_Limit*\n");encoder->value = encoder->high_Limit;}
-									else if (closest_value <= encoder->low_Limit) {printf("\n*low_Limit*\n");encoder->value = encoder->low_Limit;}
-									else {printf("\n*closest_value*\n");encoder->value = closest_value;}	
+									if (closest_value == encoder->value) {encoder->value = encoder->value + (speed * step);} // for first very low values
+									else if (closest_value >= encoder->high_Limit) {encoder->value = encoder->high_Limit;}
+									else if (closest_value <= encoder->low_Limit) {encoder->value = encoder->low_Limit;}
+									else {encoder->value = closest_value;}	
 								}
 							}
 							else { printf("\n!!! curve not recognized!!!\n") ; }
