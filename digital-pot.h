@@ -2,7 +2,7 @@
  * Permits to drive a gang of I2C digital pots behind a Raspberry Pi.
  * To be used with digital-pot.c rotaryencoder.c and rotaryencoder.h libraries.
  * Permits to test the "rotaryencoder" and "I2C-Display" libraries.
- * V.1.0.0
+ * V 1.1.0
  */
 
 /*=======================================================================\
@@ -57,17 +57,21 @@ struct digipot
 	char *digipot_label[MAX_POT_CHIP] ;             // name or label as "Volume" or "Balance" or "Treble", etc...
 	char *digipot_bus_type ;                        // 0 for I2C or 1 for SPI
 	int digipot_address ;                           // address of the chip on the I2C or SPI bus
-	char *digipot_reference ;                       // digipot provider reference
+	char *digipot_reference ;                       // digipot provider (factory) reference
 	int digipot_ohms ;                              // RAB potentiometer resistor value
 	char *digipot_curve[MAX_POT_CHIP] ;             // linear ,log, antilog, whatever described in the library
 	char *digipot_0_position[MAX_POT_CHIP] ;        // default ZERO dB gain position, right, centered, left
-	int wiper_positions ;                           // 128 256 512 1024 positions from 0 to max value (A to B pot connectors)
+	int wiper_positions ;                           // 128 256 512 1024 positions from 0 to max value (B to A digipot connectors)
 	char digipot_channels ;                         // number of independant digipots in the same chipset : single, dual, quad, octo...
 	int wiper_memo[MAX_POT_CHIP] ;                  // record the last position before to shutdown to restore at restarting for each channel
 	volatile long int digipot_value[MAX_POT_CHIP] ; // current digipot register value for each channel
 	double digipot_att[MAX_POT_CHIP] ;              // in dB, current attenuation, calculated from the current digipot_value
+	char *digipot_group_type ;                      // "PARALLEL" or "SERIAL" stack of several digipot to make only one "superdigipot" bloc
+	char digipot_group_qty ;                        // number of single digipots grouped there
+	char *digipot_single_name[MAX_POT_CHIP] ;       // real name of each single digipot composing the superdigipot stack, from lower to upper if SERIAL	
+	int digipot_switch[MAX_POT_CHIP] ;              // address of each switch which turns on each single digipot wiper
 	int digipot_setUpIO ;
-};
+} ;
 
 struct digipot digipots[MAX_DIGIPOTS] ;
 
@@ -80,4 +84,10 @@ struct digipot *setupdigipot(char *digipot_bus_type, int digipot_address,
 	char *digipot_label4, char *digipot_curve4, char *digipot_0_position4,
 	char *digipot_label5, char *digipot_curve5, char *digipot_0_position5,
 	char *digipot_label6, char *digipot_curve6, char *digipot_0_position6,
-	char *digipot_label7, char *digipot_curve7, char *digipot_0_position7) ; 
+	char *digipot_label7, char *digipot_curve7, char *digipot_0_position7,
+	char *digipot_group_type, char digipot_group_qty, 
+	char *digipot_single_name0, char *digipot_single_name1, char *digipot_single_name2,
+	char *digipot_single_name3, char *digipot_single_name4, char *digipot_single_name5,
+	char *digipot_single_name6, char *digipot_single_name7,
+	int digipot_switch0, int digipot_switch1, int digipot_switch2, int digipot_switch3,
+	int digipot_switch4, int digipot_switch5, int digipot_switch6, int digipot_switch7) ; 
