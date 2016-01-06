@@ -141,10 +141,11 @@ int main (void)
 	struct encoder *encoder = 
 	// rotary encoder name, linked digipot name, pins for A and B, sequence, curve, ZERO position, reverse, looping, low limit, high limit, value at starting, timers...
 	//setupencoder ("GAIN",  "DIGIPOT-GAIN",    0, 1,YES,"LIN","RIGHT",  NO,NO,   0, 255, 50,500000,30000,15000,6000,10,25,50) ;  // pins 0 and 1
-	setupencoder ("GAIN",  "SUPERDIGIPOT-GAIN", 0, 1,YES,"LIN","RIGHT",  NO,NO,   0,1023, 50,500000,30000,15000,6000,10,25,50) ;  // pins 0 and 1
-	setupencoder ("VOLUME","DIGIPOT-VOLUME",    2, 3,YES,"LOG","RIGHT",  NO,NO,   0, 255, 25,500000,30000,15000,6000,10,25,50) ;  // pins 2 and 3
-	setupencoder ("GRAVE", "DIGIPOT-GRAVE",     4, 5,YES,"LOG","CENTER", NO,NO,-127, 127,  0,500000,30000,15000,6000,10,25,50) ;  // pins 4 and 5
-	setupencoder ("MEDIUM","DIGIPOT-MEDIUM",    6, 7,YES,"LOG","CENTER", NO,NO,-127, 127,  0,500000,30000,15000,6000,10,25,50) ;  // pins 6 and 7
+	//setupencoder ("GAIN",  "SUPERDIGIPOT-GAIN", 0, 1,YES,"LIN","RIGHT",  NO,NO,   0,1023, 50,500000,30000,15000,6000,10,25,50) ;  // pins 0 and 1
+	setupencoder ("QUAD-VOLUME","QUAD-VOLUME", 0, 1, YES,"LOG","RIGHT",  NO,NO,   0, 255, 50,500000,30000,15000,6000,10,25,50) ;  // pins 0 and 1
+	setupencoder ("VOLUME","DIGIPOT-VOLUME",   2, 3, YES,"LOG","RIGHT",  NO,NO,   0, 255, 25,500000,30000,15000,6000,10,25,50) ;  // pins 2 and 3
+	setupencoder ("GRAVE", "DIGIPOT-GRAVE",    4, 5, YES,"LOG","CENTER", NO,NO,-127, 127,  0,500000,30000,15000,6000,10,25,50) ;  // pins 4 and 5
+	setupencoder ("MEDIUM","DIGIPOT-MEDIUM",   6, 7, YES,"LOG","CENTER", NO,NO,-127, 127,  0,500000,30000,15000,6000,10,25,50) ;  // pins 6 and 7
 	/*
 	setupencoder ("AIGUE", "DIGIPOT-AIGUE", 10,11,YES,"LOG","CENTER", NO,NO,-127,127,  0,500000,30000,15000,6000,10,25,50) ;  // pins 10 and 11
 	setupencoder ("BOUCLE","DIGIPOT-BOUCLE",12,13,YES,"LOG","RIGHT",  NO,NO,   0,255,  0,500000,30000,15000,6000,10,25,50) ;  // pins 12 and 13
@@ -185,10 +186,11 @@ int main (void)
 	setupdigipot("0",0x2c,4,"AD5263",200000,256,"DIGIPOT-GAIN","LIN","RIGHT","DIGIPOT-VOLUME","LOG","RIGHT","DIGIPOT-GRAVE","LOG","CENTER","DIGIPOT-MEDIUM","LOG","CENTER","","","","","","","","","","","","","",0,"","","","","","","","",0,0,0,0,0,0,0,0) ; // 0=I2C (1=SPI), addr, channels, ref, Ohms, positions, name#1, LOG/LIN, RIGHT/CENTER, name#2, ...
 	//setupdigipot("0",0x2d,4,"AD5263",200000,256,"DIGIPOT-AIGUE","LOG","CENTER","DIGIPOT-BOUCLE","LOG","RIGHT","DIGIPOT-SORTIE","LOG","RIGHT","DIGIPOT-CASQUE","LOG","RIGHT","","","","","","","","","","","","","",0,"","","","","","","","",0,0,0,0,0,0,0,0) ; 
 	setupdigipot("0",0x2f,4,"AD5263",200000,256,"DIGIPOT-GAIN-1","LIN","RIGHT","DIGIPOT-GAIN-2","LIN","RIGHT","DIGIPOT-GAIN-3","LIN","RIGHT","DIGIPOT-GAIN-4","LIN","RIGHT","","","","","","","","","","","","","",0,"","","","","","","","",0,0,0,0,0,0,0,0) ; // SUPERDIGIPOT description, something as "virtual", composed with a stack of further real digipots 
-	setupdigipot("",0,1,"SUPERDIGIPOT",800000,1024,"SUPERDIGIPOT-GAIN","LIN","RIGHT","","","","","","","","","","","","","","","","","","","","","","SERIAL",4,"DIGIPOT-GAIN-1","DIGIPOT-GAIN-2","DIGIPOT-GAIN-3","DIGIPOT-GAIN-4","","","","",214,215,216,217,0,0,0,0) ;
+	//setupdigipot("",0,1,"SUPERDIGIPOT",800000,1024,"SUPERDIGIPOT-GAIN","LIN","RIGHT","","","","","","","","","","","","","","","","","","","","","","SERIAL",4,"DIGIPOT-GAIN-1","DIGIPOT-GAIN-2","DIGIPOT-GAIN-3","DIGIPOT-GAIN-4","","","","",214,215,216,217,0,0,0,0) ;
 	//setupdigipot("",0,1,"STEREO-DIGIPOT",200000,256,"SUPERDIGIPOT-VOLUME","LIN","RIGHT","","","","","","","","","","","","","","","","","","","","","","PARALLEL",2,"DIGIPOT-VOLUME-1","DIGIPOT-VOLUME-2","","","","","","",0,0,0,0,0,0,0,0) ;
 	//setupdigipot("",0,1,"QUAD-DIGIPOT",200000,256,"SUPERDIGIPOT-VOLUME","LIN","RIGHT","","","","","","","","","","","","","","","","","","","","","","PARALLEL",4,"DIGIPOT-VOLUME-1","DIGIPOT-VOLUME-2","DIGIPOT-VOLUME-3","DIGIPOT-VOLUME-4","","","","",0,0,0,0,0,0,0,0) ;
 	//setupdigipot("",0,1,"OCTO-DIGIPOT",200000,256,"SUPERDIGIPOT-VOLUME","LIN","RIGHT","","","","","","","","","","","","","","","","","","","","","","PARALLEL",8,"DIGIPOT-VOLUME-1","DIGIPOT-VOLUME-2","DIGIPOT-VOLUME-3","DIGIPOT-VOLUME-4","DIGIPOT-VOLUME-5","DIGIPOT-VOLUME-6","DIGIPOT-VOLUME-7","DIGIPOT-VOLUME-8",0,0,0,0,0,0,0,0) ;
+	setupdigipot("",0,1,"QUAD-DIGIPOT",200000,256,"QUAD-VOLUME","LIN","RIGHT","","","","","","","","","","","","","","","","","","","","","","PARALLEL",4,"DIGIPOT-GAIN-1","DIGIPOT-GAIN-2","DIGIPOT-GAIN-3","DIGIPOT-GAIN-4","","","","",0,0,0,0,0,0,0,0) ;
 	printf("digipots declaration end \n") ;
 	
 	printf("bargraphs declaration start \n") ;
@@ -519,8 +521,17 @@ int main (void)
 					}
 					else // reading the superdigipot (virtual)
 					{
-						//int tap = -(x - digipot->wiper_positions) ;
-						int tap = -(digipot->digipot_value[loop] - digipot->wiper_positions) ;
+						int tap ;
+						
+						if (digipot->digipot_group_type == "SERIAL")
+						{
+							tap = -(digipot->digipot_value[loop] - digipot->wiper_positions) ;
+						}
+						else if (digipot->digipot_group_type == "PARALLEL")
+						{
+							tap = -(digipot->digipot_value[0] - digipot->wiper_positions) ;
+						}
+
 						//printf("\n superdigipot - digipot_group_qty: %d \n", digipot->digipot_group_qty) ;
 						printf(">>> SuperDigipot: %-15s - stack of: ( ", digipot->digipot_label[loop]) ;
 						int loop = 0 ;
