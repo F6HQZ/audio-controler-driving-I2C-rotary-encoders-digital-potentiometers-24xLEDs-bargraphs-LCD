@@ -2,7 +2,7 @@
  * Permits to drive a gang of I2C digital pots behind a Raspberry Pi.
  * To be used with rotaryencoder.c and rotaryencoder.h library.
  * Permits to test the "rotaryencoder" and "I2C-Display" libraries.
- * V 1.1.0
+ * V 1.1.1
  */
 
 /*=======================================================================\
@@ -86,7 +86,6 @@ int checkOneDigipot(char *digipot_label) ; // for chip tests only
 
 int updateOneDigipot(char *digipot_label, int wiper_value)
 {
-//	printf("!!! digipot: %s - value: %d \n", digipot_label, wiper_value) ;
 	struct digipot *digipot = digipots ;	
 	for (; digipot < digipots + numberofdigipots ; digipot++) // check the different digipots
 	{
@@ -98,19 +97,17 @@ int updateOneDigipot(char *digipot_label, int wiper_value)
 		int found = 0 ;
 		int digipot_switch ;
 		
-		//printf("\n=== digipot: 0x%x - digipots: 0x%x ===",digipot,digipots) ;
-		
 		int loop = 0 ;		
 		for (; loop < digipot->digipot_channels ; loop++) // check the different channels
 		{
 			if (digipot_label == digipot->digipot_label[loop]) // it's the correct digipot target
 			{
+
 				int current_loop = loop ;
 				int tap = -(wiper_value - digipot->wiper_positions) ;
 				current_digipot = digipot ; // digipot target memorisation
 				
 				found = 1 ; // found the correct digipot target
-				//printf("\n>>> current_digipot:%d 0x%x",current_digipot,current_digipot) ;
 			
 				// prepare the first (slaveAddressByte) and second (instructionByte) bytes before sending a complete I2C frame
 				if ((digipot->digipot_reference == "AD5263") && (digipot->digipot_group_qty == 0)) // chip from Analog Device, an I2C/SPI selectable quad_digipot accepting 15V signals
@@ -121,53 +118,71 @@ int updateOneDigipot(char *digipot_label, int wiper_value)
 				else if (digipot->digipot_group_qty != 0)
 				{
 					// this is a SUPERDIGIPOT, a group of several real digipots but stacked in serial or parallel and drived simultaneously with a single command
-					loop = 0 ;
+					char *digipot_single_name ;
+					
+					loop = 0 ;					
 					for (; loop < digipot->digipot_group_qty ; loop++) // scan each real digipot included in the SUPERDIGIPOT stack
-					{
-						char *digipot_single_name ;
+					{	
 						int done = 0 ;
 						digipot_single_name = digipot->digipot_single_name[loop] ; // memorise the real digipot name for this loop step
-						//printf("\n §§§ digipot_single_name:%s - digipot->digipot_single_name:%s -", digipot_single_name, digipot->digipot_single_name[loop]) ;
+						//printf("\n §§§ debut boucle FOR - loop:%d - digipot_group_qty:%d - digipot_single_name:%s - digipot->digipot_single_name:%s -", loop, digipot->digipot_group_qty, digipot_single_name, digipot->digipot_single_name[loop]) ;
 						
-						if (wiper_value < (digipot->wiper_positions / digipot->digipot_group_qty) * (loop+1)) // select the only real digipot to adjust (filtering)
-						{
-							digipot_switch = digipot->digipot_switch[loop] ; // the correct switch ID number for the wiper is stored in memory
-							//printf("\n test_if<%d - switch:%d - loop:%d - ", (digipot->wiper_positions / digipot->digipot_group_qty) * (loop+1), digipot_switch, loop) ;
-
-							digipot = digipots ; // the first one digipot address in the structure in memory
-							for (; digipot < digipots + numberofdigipots ; digipot++) // search the only one real digipot chip to adjust now and included in this SUPERDIGIPOT stack 
-							{	
-								int loop = 0 ;
-								for (; loop < digipot->digipot_channels ; loop++) // search each internal digipot (channel)
-								{	//printf("\n --- (wiper_value - (loop * digipot->wiper_positions)):%d - loop:%d",wiper_value-(loop * digipot->wiper_positions),loop) ;
-									if (digipot_single_name == digipot->digipot_label[loop]) // found the correct chip channel
-									{
-										//printf("\nA/ digipot:%d",digipot) ;
-										slaveAddressByte = digipot->digipot_address << 1 | 0b0 ; // prepare the first byte including the internal sub digipot address, only for displaying and tests, because it's sent automaticaly by wiringpi itself, don't care !	
-										instructionByte = loop << 5 ; // this is the "int reg", the second I2C byte sent by wiringpi
-										
-										if (((wiper_value - (loop * digipot->wiper_positions)) >= 0) && ((wiper_value - (loop * digipot->wiper_positions)) < digipot->wiper_positions)) // if value in the correct and expected range
+						if (digipot->digipot_group_type == "SERIAL")
+						{	
+							printf("\nSERIAL\n") ;	
+							if (wiper_value < (digipot->wiper_positions / digipot->digipot_group_qty) * (loop+1)) // select the only real digipot to adjust (filtering)
+							{
+								digipot_switch = digipot->digipot_switch[loop] ; // the correct switch ID number for the wiper is stored in memory
+								//printf("\n test_if<%d - switch:%d - loop:%d - ", (digipot->wiper_positions / digipot->digipot_group_qty) * (loop+1), digipot_switch, loop) ;
+	
+								digipot = digipots ; // the first one digipot address in the structure in memory
+								for (; digipot < digipots + numberofdigipots ; digipot++) // search the only one real digipot chip to adjust now and included in this SUPERDIGIPOT stack 
+								{	
+									int loop = 0 ;
+									for (; loop < digipot->digipot_channels ; loop++) // search each internal digipot (channel)
+									{	
+										if (digipot_single_name == digipot->digipot_label[loop]) // found the correct chip channel
 										{
-											wiringPiI2CWriteReg8(digipot->digipot_setUpIO, instructionByte, wiper_value - (loop * digipot->wiper_positions)) ; // send the complete I2C frame to the chip
-											digipot->digipot_value[loop] = wiper_value - (loop * digipot->wiper_positions) ; // store the wiper value in memory
-											done = 1 ;
-											//printf("\n>>> I2C-WRITE -> digipot_setUpIO:%d - digipot_label:%s - slaveAddressByte:%d - instructionByte:%d - wiper_value:%d",digipot->digipot_setUpIO,digipot->digipot_label[loop],slaveAddressByte,instructionByte,wiper_value - (loop * digipot->wiper_positions)) ;									
+											slaveAddressByte = digipot->digipot_address << 1 | 0b0 ; // prepare the first byte including the internal sub digipot address, only for displaying and tests, because it's sent automaticaly by wiringpi itself, don't care !	
+											instructionByte = loop << 5 ; // this is the "int reg", the second I2C byte sent by wiringpi
+											
+											if (((wiper_value - (loop * digipot->wiper_positions)) >= 0) && ((wiper_value - (loop * digipot->wiper_positions)) < digipot->wiper_positions)) // if value in the correct and expected range
+											{
+												wiringPiI2CWriteReg8(digipot->digipot_setUpIO, instructionByte, wiper_value - (loop * digipot->wiper_positions)) ; // send the complete I2C frame to the chip
+												digipot->digipot_value[loop] = wiper_value - (loop * digipot->wiper_positions) ; // store the wiper value in memory
+												done = 1 ;
+											}
 										}
-										done = 1 ;
 									}
-									//if (done) { break ;} 
 								}
-								//if (done) { break ;} 
 							}
 						}
-						//if (done) { break ;} 
+						else if (digipot->digipot_group_type == "PARALLEL")
+						{
+							digipot = digipots ; // point to the first one digipot address (beginning of the structure) in memory
+							for (; digipot < digipots + numberofdigipots ; digipot++) // scan all the digipots one after other
+							{	
+								int loop2 = 0 ;
+								for (; loop2 < digipot->digipot_channels ; loop2++) // search each internal digipot (channel) of each chip
+								{	
+									if (digipot_single_name == digipot->digipot_label[loop2]) // found the correct chip channel
+									{	
+										slaveAddressByte = digipot->digipot_address << 1 | 0b0 ; // prepare the first byte including the internal sub digipot address, only for displaying and tests, because it's sent automaticaly by wiringpi itself, don't care !	
+										instructionByte = loop << 5 ; // this is the "int reg", the second I2C byte sent by wiringpi
+
+										wiringPiI2CWriteReg8(digipot->digipot_setUpIO, instructionByte, wiper_value) ; // send the complete I2C frame to the chip
+										digipot->digipot_value[loop] = wiper_value ; // store the wiper value in memory
+										done = 1 ;
+									}
+								}
+							}
+							digipot = current_digipot ;
+						}
 					}
 				}
 
 				digipot = current_digipot ; // reload the original first digipot target
 				loop = current_loop ; // reload the original first digipot loop level
-				//printf("\nB/ digipot:%d - loop:%d",digipot,loop) ;
-				//printf("\n1/ -> digipot_setUpIO:%d - digipot_label:%s - slaveAddressByte:%d - instructionByte:%d - wiper_value:%d",digipot->digipot_setUpIO,digipot->digipot_label[loop],slaveAddressByte,instructionByte,wiper_value - (loop * digipot->wiper_positions)) ;
 
 				// convert digipot tap position to attenuation in dB
 				if (digipot->digipot_0_position[loop] == "RIGHT")
@@ -175,15 +190,12 @@ int updateOneDigipot(char *digipot_label, int wiper_value)
 					ratio = (float) (digipot->wiper_positions - tap) / (digipot->wiper_positions -1) ;
 					digipot->digipot_value[loop] = wiper_value ; // store the wiper value in memory
 					if (digipot->digipot_group_qty == 0) { wiringPiI2CWriteReg8(digipot->digipot_setUpIO, instructionByte, wiper_value) ; } // send the complete I2C frame to the chip which is a single real digipot
-					//printf("\n2/ -> digipot_setUpIO:%d - digipot_label:%s - slaveAddressByte:%d - instructionByte:%d - wiper_value:%d",digipot->digipot_setUpIO,digipot->digipot_label[loop],slaveAddressByte,instructionByte,wiper_value - (loop * digipot->wiper_positions)) ;
 				}
 				else if (digipot->digipot_0_position[loop] == "CENTER")
 				{
 					if (wiper_value >= 0)
 					{
-						//ratio = (float) digipot->wiper_positions / (digipot->wiper_positions - wiper_value) ;
 						ratio = (float) (wiper_value + digipot->wiper_positions/2) / (digipot->wiper_positions/2) ;
-						//printf("\n###### wiper_value:%d - ratio:%f ######\n",wiper_value) ;
 						digipot->digipot_value[loop] = wiper_value + (digipot->wiper_positions / 2) - 1 ; // store the wiper value in memory
 						if (digipot->digipot_group_qty == 0) { wiringPiI2CWriteReg8(digipot->digipot_setUpIO, instructionByte, wiper_value + (digipot->wiper_positions / 2) - 1) ; } // send the complete I2C frame to the chip
 					}
@@ -200,23 +212,24 @@ int updateOneDigipot(char *digipot_label, int wiper_value)
 					printf("ELSE-digipot->digipot_0_position:%s",digipot->digipot_0_position[loop]) ;
 				}
 				
-				int loop2 = 0 ;
-				for (; loop2 < digipot->digipot_group_qty ; loop2++) // search each internal digipot (channel) 
+				if ((digipot->digipot_group_qty != 0) && (digipot->digipot_group_type == "SERIAL"))
 				{
-					if (digipot->digipot_switch[loop2] != digipot_switch) // if not the selected digipot's wipper
+					int loop2 = 0 ;
+					for (; loop2 < digipot->digipot_group_qty ; loop2++) // search each internal digipot (channel) 
 					{
-						digitalWrite(digipot->digipot_switch[loop2], OFF) ; // switch OFF all the non-used wipers
+						if (digipot->digipot_switch[loop2] != digipot_switch) // if not the selected digipot's wipper
+						{
+							digitalWrite(digipot->digipot_switch[loop2], OFF) ; // switch OFF all the non-used wipers
+						}
 					}
+					digitalWrite(digipot_switch, ON) ; // switch ON the digital output which drives the switch to select the correct
+					                                   // wiper, just after have switched off all the others (never ON twice switches
+					                                   // in same time, silence is better than a big noise !)
 				}
-				//printf("\n+++ digipot->digipot_switch:%d", digipot_switch) ;
-				digitalWrite(digipot_switch, ON) ; // switch ON the digital output which drives the switch to select the correct
-				                                   // wiper, just after have switched off all the others (never ON twice switches
-				                                   // in same time, silence is better than a big noise !)
 
 				// write value to digipot chip and convert digipot tap position to attenuation in dB			
 				dB = (20 * log10(ratio)) ;
 				digipot->digipot_att[loop] = dB ; // store the digipot attenuation in dB
-				//printf("\n>>> Digipot >>> Loop:%d - Label:%s - Positions:%d - RotaryEncoderValue:%d - Ratio:%f - dB:%f - DigipotValue:%d \n",loop,digipot->digipot_label[loop],digipot->wiper_positions,wiper_value,ratio,dB,digipot->digipot_value[loop]) ;
 				
 				if (found) { break ; } // digipot found, stop searching
 			}	
@@ -243,7 +256,7 @@ double digipotRead(char *digipot_label)
 			int loop = 0 ; 
 			if (digipot_label == digipot->digipot_label[loop])
 			{
-				if (digipot->digipot_group_qty == 0)
+				if (digipot->digipot_group_qty == 0) // standard alone digipot
 				{
 	//				printf("*** digipot_label: %s - digipot->digipot_label: %d - loop: %d \n", digipot_label, digipot->digipot_label, loop) ;
 					int slaveAddressByte = digipot->digipot_address << 1 | 0b0 ; // prepare the first byte including the internal sub digipot address, only for displaying and tests, because it's sent automaticaly by wiringpi itself, don't care !
@@ -277,7 +290,7 @@ double digipotRead(char *digipot_label)
 								digipot->digipot_address, digipot->digipot_address, digipot->digipot_setUpIO, digipot->digipot_setUpIO, slaveAddressByte, slaveAddressByte, instructionByte, instructionByte, x, dB) ;
 	*/
 					}
-					else
+					else // stacked digipots drived simultaneously (grouped t oform a single serial or parallel SUPERDIGIPOT)
 					{
 						printf("\n!!! - Digipot Read error - !!!\n") ;
 					}
@@ -380,8 +393,7 @@ struct digipot *setupdigipot(char *digipot_bus_type, int digipot_address,
 	newdigipot->digipot_group_type = digipot_group_type ; // "PARALLEL" or "SERIAL" stack of several digipot to make only one "superdigipot" bloc
 	newdigipot->digipot_group_qty = digipot_group_qty ;   // number of single digipots grouped there
 	
-	printf("\n++++++++++++++ GROUP TYPE:%s - GROUP QTY:%d - newdigipot->digipot_group_type:%s - newdigipot->digipot_group_qty:%d +++++++++++++++++++++++++++\n"
-			,digipot_group_type, digipot_group_qty, newdigipot->digipot_group_type, newdigipot->digipot_group_qty) ;
+	//printf("\n++++++++++++++ GROUP TYPE:%s - GROUP QTY:%d - newdigipot->digipot_group_type:%s - newdigipot->digipot_group_qty:%d +++++++++++++++++++++++++++\n",digipot_group_type, digipot_group_qty, newdigipot->digipot_group_type, newdigipot->digipot_group_qty) ;
 	
 	int loop = 0 ;
 	for (; loop < digipot_channels ; loop++)
@@ -487,100 +499,91 @@ struct digipot *setupdigipot(char *digipot_bus_type, int digipot_address,
 		}
 	}
 
-	if (digipot_group_qty > 0)
+	if ((digipot_group_qty > 0) && (digipot_group_type == "SERIAL"))
 	{
 		wiper_positions = 0 ;
 		int loop_1 = 0 ;
-		//for (; loop_1 < digipot_group_qty ; loop_1++) // for each stacked real digipot
-		//{
-			printf("\n °°° loop_1:%d - ",loop_1) ;
-			
-			struct digipot *digipot = digipots ;	
-			for (; digipot < digipots + numberofdigipots ; digipot++) // search each digipot chip
-			{
-				printf("\n === 1/ wiper_positions:%d - digipot->digipot_label[loop]:%d - ",wiper_positions,digipot->digipot_label[loop]) ;
+		
+		//printf("\n °°° loop_1:%d - ",loop_1) ;
+		
+		struct digipot *digipot = digipots ;	
+		for (; digipot < digipots + numberofdigipots ; digipot++) // search each digipot chip
+		{
+			//printf("\n === 1/ wiper_positions:%d - digipot->digipot_label[loop]:%d - ",wiper_positions,digipot->digipot_label[loop]) ;
 
-				int loop = 0 ;
-				for (; loop < digipot->digipot_channels ; loop++) // search each internal digipot (channel)
-				{			
-					printf("digipot:%s - ",digipot->digipot_label[loop]) ;
-					
-					switch(loop) // check each internal digipot
-					{
-						case 0:
-							if (digipot_single_name0 == digipot->digipot_label[loop])
-							{
-								wiper_positions = wiper_positions + digipot->wiper_positions ;
-								printf("\n *** case 0 - name0:%s - digipot->digipot_label[0]:%s - digipot->wiper_positions:%d - wiper_positions:%d - "
-										,digipot_single_name0,digipot->digipot_label[loop],digipot->wiper_positions,wiper_positions) ;
-							}
-							break ;
-						case 1:
-							if (digipot_single_name1 == digipot->digipot_label[loop])
-							{
-								wiper_positions = wiper_positions + digipot->wiper_positions ;
-								printf("\n *** case 1 - name1:%s - digipot->digipot_label[1]:%s - digipot->wiper_positions:%d - wiper_positions:%d - "
-										,digipot_single_name1,digipot->digipot_label[loop],digipot->wiper_positions,wiper_positions) ;
-							}
-							break ;
-						case 2:
-							if (digipot_single_name2 == digipot->digipot_label[loop])
-							{
-								wiper_positions = wiper_positions + digipot->wiper_positions ;
-								printf("\n *** case 2 - name2:%s - digipot->digipot_label[2]:%s - digipot->wiper_positions:%d - wiper_positions:%d - "
-										,digipot_single_name2,digipot->digipot_label[loop],digipot->wiper_positions,wiper_positions) ;
-							}
-							break ;	
-						case 3:
-							if (digipot_single_name3 == digipot->digipot_label[loop])
-							{
-								wiper_positions = wiper_positions + digipot->wiper_positions ;
-								printf("\n *** case 3 - name3:%s - digipot->digipot_label[3]:%s - digipot->wiper_positions:%d - wiper_positions:%d - "
-										,digipot_single_name3,digipot->digipot_label[loop],digipot->wiper_positions,wiper_positions) ;
-							}
-							break ;	
-						case 4:
-							if (digipot_single_name4 == digipot->digipot_label[loop])
-							{
-								wiper_positions = wiper_positions + digipot->wiper_positions ;
-								printf("\n *** case 4 - name4:%s - digipot->digipot_label[4]:%s - digipot->wiper_positions:%d - wiper_positions:%d - "
-										,digipot_single_name4,digipot->digipot_label[loop],digipot->wiper_positions,wiper_positions) ;
-							}
-							break ;
-						case 5:
-							if (digipot_single_name5 == digipot->digipot_label[loop])
-							{
-								wiper_positions = wiper_positions + digipot->wiper_positions ;
-								printf("\n *** case 5 - name5:%s - digipot->digipot_label[5]:%s - digipot->wiper_positions:%d - wiper_positions:%d - "
-										,digipot_single_name5,digipot->digipot_label[loop],digipot->wiper_positions,wiper_positions) ;
-							}
-							break ;
-						case 6:
-							if (digipot_single_name6 == digipot->digipot_label[loop])
-							{
-								wiper_positions = wiper_positions + digipot->wiper_positions ;
-								printf("\n *** case 6 - name6:%s - digipot->digipot_label[6]:%s - digipot->wiper_positions:%d - wiper_positions:%d - "
-										,digipot_single_name6,digipot->digipot_label[loop],digipot->wiper_positions,wiper_positions) ;
-							}
-							break ;
-						case 7:
-							if (digipot_single_name7 == digipot->digipot_label[loop])
-							{
-								wiper_positions = wiper_positions + digipot->wiper_positions ;
-								printf("\n *** case 7 - name7:%s - digipot->digipot_label[7]:%s - digipot->wiper_positions:%d - wiper_positions:%d - "
-										,digipot_single_name7,digipot->digipot_label[loop],digipot->wiper_positions,wiper_positions) ;
-							}
-							break ;
-						default:
-							printf("more than 8 digipots !") ;
-							break ;
-					}
+			int loop = 0 ;
+			for (; loop < digipot->digipot_channels ; loop++) // search each internal digipot (channel)
+			{			
+				//printf("digipot:%s - ",digipot->digipot_label[loop]) ;
+				
+				switch(loop) // check each internal digipot
+				{
+					case 0:
+						if (digipot_single_name0 == digipot->digipot_label[loop])
+						{
+							wiper_positions = wiper_positions + digipot->wiper_positions ;
+							//printf("\n *** case 0 - name0:%s - digipot->digipot_label[0]:%s - digipot->wiper_positions:%d - wiper_positions:%d - ",digipot_single_name0,digipot->digipot_label[loop],digipot->wiper_positions,wiper_positions) ;
+						}
+						break ;
+					case 1:
+						if (digipot_single_name1 == digipot->digipot_label[loop])
+						{
+							wiper_positions = wiper_positions + digipot->wiper_positions ;
+							//printf("\n *** case 1 - name1:%s - digipot->digipot_label[1]:%s - digipot->wiper_positions:%d - wiper_positions:%d - ",digipot_single_name1,digipot->digipot_label[loop],digipot->wiper_positions,wiper_positions) ;
+						}
+						break ;
+					case 2:
+						if (digipot_single_name2 == digipot->digipot_label[loop])
+						{
+							wiper_positions = wiper_positions + digipot->wiper_positions ;
+							//printf("\n *** case 2 - name2:%s - digipot->digipot_label[2]:%s - digipot->wiper_positions:%d - wiper_positions:%d - ",digipot_single_name2,digipot->digipot_label[loop],digipot->wiper_positions,wiper_positions) ;
+						}
+						break ;	
+					case 3:
+						if (digipot_single_name3 == digipot->digipot_label[loop])
+						{
+							wiper_positions = wiper_positions + digipot->wiper_positions ;
+							//printf("\n *** case 3 - name3:%s - digipot->digipot_label[3]:%s - digipot->wiper_positions:%d - wiper_positions:%d - ",digipot_single_name3,digipot->digipot_label[loop],digipot->wiper_positions,wiper_positions) ;
+						}
+						break ;	
+					case 4:
+						if (digipot_single_name4 == digipot->digipot_label[loop])
+						{
+							wiper_positions = wiper_positions + digipot->wiper_positions ;
+							//printf("\n *** case 4 - name4:%s - digipot->digipot_label[4]:%s - digipot->wiper_positions:%d - wiper_positions:%d - ",digipot_single_name4,digipot->digipot_label[loop],digipot->wiper_positions,wiper_positions) ;
+						}
+						break ;
+					case 5:
+						if (digipot_single_name5 == digipot->digipot_label[loop])
+						{
+							wiper_positions = wiper_positions + digipot->wiper_positions ;
+							//printf("\n *** case 5 - name5:%s - digipot->digipot_label[5]:%s - digipot->wiper_positions:%d - wiper_positions:%d - ",digipot_single_name5,digipot->digipot_label[loop],digipot->wiper_positions,wiper_positions) ;
+						}
+						break ;
+					case 6:
+						if (digipot_single_name6 == digipot->digipot_label[loop])
+						{
+							wiper_positions = wiper_positions + digipot->wiper_positions ;
+							//printf("\n *** case 6 - name6:%s - digipot->digipot_label[6]:%s - digipot->wiper_positions:%d - wiper_positions:%d - ",digipot_single_name6,digipot->digipot_label[loop],digipot->wiper_positions,wiper_positions) ;
+						}
+						break ;
+					case 7:
+						if (digipot_single_name7 == digipot->digipot_label[loop])
+						{
+							wiper_positions = wiper_positions + digipot->wiper_positions ;
+							//printf("\n *** case 7 - name7:%s - digipot->digipot_label[7]:%s - digipot->wiper_positions:%d - wiper_positions:%d - ",digipot_single_name7,digipot->digipot_label[loop],digipot->wiper_positions,wiper_positions) ;
+						}
+						break ;
+					default:
+						printf("more than 8 digipots !") ;
+						break ;
 				}
-				printf("2/ wiper_positions:%d - digipot->digipot_label[loop]:%d - ",wiper_positions,digipot->digipot_label[loop]) ;
-			}	
-		//}
+			}
+			//printf("2/ wiper_positions:%d - digipot->digipot_label[loop]:%d - ",wiper_positions,digipot->digipot_label[loop]) ;
+		}	
+
 		newdigipot->wiper_positions = wiper_positions ;  // 128 256 512 1024 positions from 0 to max value (A to B pot connectors)
-		printf("total_wiper_positions:%d \n",wiper_positions) ;
+		//printf("total_wiper_positions:%d \n",wiper_positions) ;
 	}
 
 	setUpIO = wiringPiI2CSetup(digipot_address) ; // I2C init, target to selected chip
