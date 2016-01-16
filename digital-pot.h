@@ -70,6 +70,7 @@ struct digipot
 	char digipot_group_qty ;                        // number of single digipots grouped there
 	char *digipot_single_name[MAX_POT_CHIP] ;       // real name of each single digipot composing the superdigipot stack, from lower to upper if SERIAL	
 	int digipot_switch[MAX_POT_CHIP] ;              // address of each switch which turns on each single digipot wiper
+	double digipot_ground_resistance[MAX_POT_CHIP] ;// resistance value if exists in serial between digipot B point and circuit ground, in Ohms
 	int digipot_setUpIO ;
 } ;
 
@@ -90,4 +91,8 @@ struct digipot *setupdigipot(char *digipot_bus_type, int digipot_address,
 	char *digipot_single_name3, char *digipot_single_name4, char *digipot_single_name5,
 	char *digipot_single_name6, char *digipot_single_name7,
 	int digipot_switch0, int digipot_switch1, int digipot_switch2, int digipot_switch3,
-	int digipot_switch4, int digipot_switch5, int digipot_switch6, int digipot_switch7) ; 
+	int digipot_switch4, int digipot_switch5, int digipot_switch6, int digipot_switch7,
+	double digipot_ground_resistance0, double digipot_ground_resistance1, 
+	double digipot_ground_resistance2, double digipot_ground_resistance3,
+	double digipot_ground_resistance4, double digipot_ground_resistance5,
+	double digipot_ground_resistance6, double digipot_ground_resistance7) ;
