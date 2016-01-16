@@ -1,7 +1,7 @@
 /* rotaryencoder.h :
  * Header for "rotaryencoder.c" LGPLv3 library for Raspberry Pi.
  * Needs its rotaryencoder.c file companion and "wiringPi" LPGLv3 lib.
- * V1.1.1
+ * V 1.1.2
  */
 
 /*=======================================================================\
@@ -89,6 +89,7 @@ struct encoder
 	int speed_Level_Multiplier_2 ;  // second speed level multiplier value
 	int speed_Level_Multiplier_3 ;  // third speed level multiplier value
 	int speed_Level_Multiplier_4 ;  // fourth speed level multiplier value
+	double RgroundPercent ;         // ratio resistance_to_ground / digipot_AB_value in percent 
 	unsigned long int last_IRQ_a ;  // last time IRQ on pin_A
 	unsigned long int last_IRQ_b ;  // last time IRQ on pin_B
 	int last_Pin ;                  // last pin which has been active
@@ -102,7 +103,8 @@ struct encoder *setupencoder(char *label, char *drived_Entity,
 	unsigned char reverse, unsigned char looping, long int low_Limit, long int high_Limit, 
 	long int value, unsigned long int pause, 
 	int speed_Level_Threshold_2, int speed_Level_Threshold_3, int speed_Level_Threshold_4,
-	int speed_Level_Multiplier_2, int speed_Level_Multiplier_3, int speed_Level_Multiplier_4) ; 
+	int speed_Level_Multiplier_2, int speed_Level_Multiplier_3, int speed_Level_Multiplier_4,
+	double RgroundPercent) ; 
 
 //---------------------------------------------------------------------
 // buttons
