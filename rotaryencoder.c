@@ -107,7 +107,8 @@ struct encoder *setupencoder(char *label, char *drived_Entity,
 	unsigned char reverse, unsigned char looping, long int low_Limit, long int high_Limit, 
 	long int value, unsigned long int pause, 
 	int speed_Level_Threshold_2, int speed_Level_Threshold_3, int speed_Level_Threshold_4,
-	int speed_Level_Multiplier_2, int speed_Level_Multiplier_3, int speed_Level_Multiplier_4) ;
+	int speed_Level_Multiplier_2, int speed_Level_Multiplier_3, int speed_Level_Multiplier_4, 
+	double RgroundPercent) ;
 struct button *setupbutton(char *label, int pin, long int value) ;
 	
 void updateOneEncoder(unsigned char interrupt) ;
@@ -330,7 +331,6 @@ void updateOneEncoder(unsigned char interrupt)
 						if ( ( (encoder->value + (speed * step)) <= encoder->high_Limit ) 
 							&& ( (encoder->value + (speed * step)) >= encoder->low_Limit ) )
 						{
-							//printf("\n encoder->curve:%s \n",encoder->curve) ;
 							if (encoder->curve == "LIN") 
 							{
 								encoder->value = encoder->value + (speed * step) ;
@@ -344,38 +344,16 @@ void updateOneEncoder(unsigned char interrupt)
 									
 								if (encoder->zero_dB_position == "RIGHT") 
 								{ 
-									if (encoder->value >= 0) 
-									{
-										//printf("\n+++ encoder->value:%d - ", encoder->value) ;
-										ratio = (float) encoder->value / (encoder->high_Limit) ; 
-										dB = 20 * log10(ratio) ; // previous level
-										dB = dB + (speed * step) ; // target level
-										value = (pow(10,(dB / 20)) * encoder->high_Limit) ;
-										closest_value = (int) value + 0.5 ; // closest digital value
-										
-										if (closest_value == encoder->value) {encoder->value = encoder->value + (speed * step);} // for first very low values
-										else if (closest_value >= encoder->high_Limit) {encoder->value = encoder->high_Limit;}
-										else if (closest_value <= encoder->low_Limit) {encoder->value = encoder->low_Limit;}
-										else {encoder->value = closest_value;}	
-									}
-									/*
-									else // negative value
-									{
-										printf("\n--- encoder->value - ",encoder->value) ;
-										ratio = (float) encoder->value / encoder->low_Limit ;
-										dB = 20 * log10(ratio) - (speed * step) ;
-										value = (pow(10,(dB / 20)) * encoder->low_Limit) ;
-										closest_value = (int) value - 0.5 ; // closest digital value
-										
-										if (closest_value == encoder->value) {printf("*encoder_value*");encoder->value = encoder->value + (speed * step);}
-										else if (closest_value >= encoder->high_Limit) {printf("*high_Limit*");encoder->value = encoder->high_Limit;}
-										else if (closest_value <= encoder->low_Limit) {printf("*low_Limit*");encoder->value = encoder->low_Limit;}
-										else {printf("*closest_value*");encoder->value = closest_value;}	
-	
-										printf(" *** LOG *** Low_Limit:%d - High_Limit:%d - closest_value:%f - encoder_value:%d - value:%f - ratio:%f - dB:%f \n",
-													encoder->low_Limit,encoder->high_Limit,closest_value,encoder->value,value,ratio,dB) ;
-									}
-									*/
+									ratio = (float) (encoder->value + ((encoder->high_Limit * encoder->RgroundPercent) / 100)) / (encoder->high_Limit + ((encoder->high_Limit * encoder->RgroundPercent) / 100)) ; 
+									dB = 20 * log10(ratio) ; // previous level
+									dB = dB + (speed * step) ; // target level
+									value = (pow(10,(dB / 20)) * (encoder->high_Limit + ((encoder->high_Limit * encoder->RgroundPercent) / 100))) - ((encoder->high_Limit * encoder->RgroundPercent) / 100) ;
+									closest_value = (int) value + 0.5 ; // closest digital value
+									
+									if (closest_value == encoder->value) {encoder->value = encoder->value + (speed * step);} // for first very low values
+									else if (closest_value >= encoder->high_Limit) {encoder->value = encoder->high_Limit;}
+									else if (closest_value <= encoder->low_Limit) {encoder->value = encoder->low_Limit;}
+									else {encoder->value = closest_value;}	
 								}
 								else if (encoder->zero_dB_position == "CENTER") 
 								{ 
@@ -660,7 +638,8 @@ struct encoder *setupencoder(char *label, char *drived_Entity,
 	unsigned char reverse, unsigned char looping, long int low_Limit, long int high_Limit, 
 	long int value, unsigned long int pause, 
 	int speed_Level_Threshold_2, int speed_Level_Threshold_3, int speed_Level_Threshold_4,
-	int speed_Level_Multiplier_2, int speed_Level_Multiplier_3, int speed_Level_Multiplier_4)
+	int speed_Level_Multiplier_2, int speed_Level_Multiplier_3, int speed_Level_Multiplier_4,
+	double RgroundPercent)
 {
 	int pin ;
 	int loop = 0 ;
@@ -714,6 +693,7 @@ struct encoder *setupencoder(char *label, char *drived_Entity,
 	newencoder->speed_Level_Multiplier_2 = speed_Level_Multiplier_2 ; // second speed level multiplier value
 	newencoder->speed_Level_Multiplier_3 = speed_Level_Multiplier_3 ; // third speed level multiplier value
 	newencoder->speed_Level_Multiplier_4 = speed_Level_Multiplier_4 ; // fourth speed level multiplier value
+	newencoder->RgroundPercent = RgroundPercent ;                     // ratio resistance_to_ground / digipot_AB_value in percent  
 	newencoder->last_IRQ_a = 0 ;                                      // last time IRQ a
 	newencoder->last_IRQ_b = 0 ;                                      // last time IRQ b
 	newencoder ->last_Pin = -1 ;                                      // to avoid 0 at software starting
