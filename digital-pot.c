@@ -2,7 +2,7 @@
  * Permits to drive a gang of I2C digital pots behind a Raspberry Pi.
  * To be used with rotaryencoder.c and rotaryencoder.h library.
  * Permits to test the "rotaryencoder" and "I2C-Display" libraries.
- * V 1.1.1
+ * V 1.1.0
  */
 
 /*=======================================================================\
@@ -72,7 +72,11 @@ struct digipot *setupdigipot(char *digipot_bus_type, int digipot_address,
 	char *digipot_single_name3, char *digipot_single_name4, char *digipot_single_name5,
 	char *digipot_single_name6, char *digipot_single_name7,
 	int digipot_switch0, int digipot_switch1, int digipot_switch2, int digipot_switch3,
-	int digipot_switch4, int digipot_switch5, int digipot_switch6, int digipot_switch7) ;
+	int digipot_switch4, int digipot_switch5, int digipot_switch6, int digipot_switch7,
+	double digipot_ground_resistance0, double digipot_ground_resistance1, 
+	double digipot_ground_resistance2, double digipot_ground_resistance3,
+	double digipot_ground_resistance4, double digipot_ground_resistance5,
+	double digipot_ground_resistance6, double digipot_ground_resistance7) ;
 
 // don't change these init values :
 int numberofdigipots = 0 ; // as writed, number of digipots, will be modified by the code later
@@ -187,7 +191,8 @@ int updateOneDigipot(char *digipot_label, int wiper_value)
 				// convert digipot tap position to attenuation in dB
 				if (digipot->digipot_0_position[loop] == "RIGHT")
 				{
-					ratio = (float) (digipot->wiper_positions - tap) / (digipot->wiper_positions -1) ;
+					//ratio = (float) (digipot->wiper_positions - tap) / (digipot->wiper_positions -1) ;
+					ratio = (float) (digipot->wiper_positions + (digipot->wiper_positions * (digipot->digipot_ground_resistance[loop] / digipot->digipot_ohms)) - tap) / (digipot->wiper_positions + (digipot->wiper_positions * (digipot->digipot_ground_resistance[loop] / digipot->digipot_ohms)) -1) ;
 					digipot->digipot_value[loop] = wiper_value ; // store the wiper value in memory
 					if (digipot->digipot_group_qty == 0) { wiringPiI2CWriteReg8(digipot->digipot_setUpIO, instructionByte, wiper_value) ; } // send the complete I2C frame to the chip which is a single real digipot
 				}
@@ -375,7 +380,11 @@ struct digipot *setupdigipot(char *digipot_bus_type, int digipot_address,
 	char *digipot_single_name3, char *digipot_single_name4, char *digipot_single_name5,
 	char *digipot_single_name6, char *digipot_single_name7,
 	int digipot_switch0, int digipot_switch1, int digipot_switch2, int digipot_switch3,
-	int digipot_switch4, int digipot_switch5, int digipot_switch6, int digipot_switch7)
+	int digipot_switch4, int digipot_switch5, int digipot_switch6, int digipot_switch7,
+	double digipot_ground_resistance0, double digipot_ground_resistance1, 
+	double digipot_ground_resistance2, double digipot_ground_resistance3,
+	double digipot_ground_resistance4, double digipot_ground_resistance5,
+	double digipot_ground_resistance6, double digipot_ground_resistance7)
 {
 	if (numberofdigipots > MAX_DIGIPOTS)
 	{
@@ -405,41 +414,49 @@ struct digipot *setupdigipot(char *digipot_bus_type, int digipot_address,
 				newdigipot->digipot_label[0] = digipot_label0 ;           // 8 labels for names for each independant pots in the same IC
 				newdigipot->digipot_curve[0] = digipot_curve0 ;           // linear ,log, antilog, whatever described in the library
 				newdigipot->digipot_0_position[0] = digipot_0_position0 ; // ZERO dB position
+				newdigipot->digipot_ground_resistance[0] = digipot_ground_resistance0 ;
 				break ;
 			case 1:
 				newdigipot->digipot_label[1] = digipot_label1 ; 
 				newdigipot->digipot_curve[1] = digipot_curve1 ;
 				newdigipot->digipot_0_position[1] = digipot_0_position1 ;
+				newdigipot->digipot_ground_resistance[1] = digipot_ground_resistance1 ;
 				break ;
 			case 2:
 				newdigipot->digipot_label[2] = digipot_label2 ; 
 				newdigipot->digipot_curve[2] = digipot_curve2 ;
 				newdigipot->digipot_0_position[2] = digipot_0_position2 ;
+				newdigipot->digipot_ground_resistance[2] = digipot_ground_resistance2 ;
 				break ;
 			case 3:        
 				newdigipot->digipot_label[3] = digipot_label3 ;
 				newdigipot->digipot_curve[3] = digipot_curve3 ;
 				newdigipot->digipot_0_position[3] = digipot_0_position3 ;
+				newdigipot->digipot_ground_resistance[3] = digipot_ground_resistance3 ;
 				break ;
 			case 4:
 				newdigipot->digipot_label[4] = digipot_label4 ;
 				newdigipot->digipot_curve[4] = digipot_curve4 ;
 				newdigipot->digipot_0_position[4] = digipot_0_position4 ;
+				newdigipot->digipot_ground_resistance[4] = digipot_ground_resistance4 ;
 				break ;
 			case 5:
 				newdigipot->digipot_label[5] = digipot_label5 ;
 				newdigipot->digipot_curve[5] = digipot_curve5 ;
 				newdigipot->digipot_0_position[5] = digipot_0_position5 ; 
+				newdigipot->digipot_ground_resistance[5] = digipot_ground_resistance5 ;
 				break ;
 			case 6:
 				newdigipot->digipot_label[6] = digipot_label6 ;
 				newdigipot->digipot_curve[6] = digipot_curve6 ;
 				newdigipot->digipot_0_position[6] = digipot_0_position6 ;
+				newdigipot->digipot_ground_resistance[6] = digipot_ground_resistance6 ;
 				break ;
 			case 7:
 				newdigipot->digipot_label[7] = digipot_label7 ;
 				newdigipot->digipot_curve[7] = digipot_curve7 ; 
 				newdigipot->digipot_0_position[7] = digipot_0_position7 ; 
+				newdigipot->digipot_ground_resistance[7] = digipot_ground_resistance7 ;
 				break ;
 			default:
 				printf("more than 8 channels !") ;
